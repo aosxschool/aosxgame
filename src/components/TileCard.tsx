@@ -47,8 +47,8 @@ export default function TileCard(props: {
         key={`${props.tile.claimedByTeamId ?? 'none'}`}
         className='tileArrangement'
       >
-        <div className="tilePoints">{props.tile.question.points}</div>
-        <div className="tilePtsLabel">PTS</div>
+        <div className="tilePoints">{props.tile.question.points} PTS</div>
+        <div className="tileCategory">{props.tile.question.category}</div>
 
 
         {claimedTeam && (

@@ -7,9 +7,10 @@ type Q = {
   answer: string
   points: number
   time_limit_sec: number
+  category: string
 }
 
-const REQUIRED_KEYS = ["slot", "question", "answer", "points", "time_limit_sec"] as const
+const REQUIRED_KEYS = ["slot", "question", "answer", "points", "time_limit_sec", "category"] as const
 
 function bad(msg: string, status = 400) {
   return new Response(JSON.stringify({ ok: false, error: msg }), {
@@ -38,6 +39,7 @@ serve(async (req) => {
     if (questions.length !== 16) return bad("Must provide exactly 16 questions")
 
     const slots = new Set<number>()
+
     const cleaned: Q[] = questions.map((raw: any, idx: number) => {
       for (const k of REQUIRED_KEYS) {
         if (raw?.[k] === undefined || raw?.[k] === null) {
@@ -50,6 +52,7 @@ serve(async (req) => {
       const time_limit_sec = Number(raw.time_limit_sec)
       const question = String(raw.question ?? "").trim()
       const answer = String(raw.answer ?? "").trim()
+      const category = String(raw.category ?? "").trim()
 
       if (!Number.isInteger(slot) || slot < 1 || slot > 16) throw new Error(`Row ${idx + 1}: slot must be 1–16`)
       if (slots.has(slot)) throw new Error(`Duplicate slot: ${slot}`)
@@ -57,10 +60,11 @@ serve(async (req) => {
 
       if (!question) throw new Error(`Row ${idx + 1} (slot ${slot}): question is blank`)
       if (!answer) throw new Error(`Row ${idx + 1} (slot ${slot}): answer is blank`)
+      if (!category) throw new Error(`Row ${idx + 1} (slot ${slot}): category is blank`)
       if (!Number.isFinite(points)) throw new Error(`Row ${idx + 1} (slot ${slot}): points must be number`)
       if (!Number.isFinite(time_limit_sec)) throw new Error(`Row ${idx + 1} (slot ${slot}): time_limit_sec must be number`)
 
-      return { slot, question, answer, points, time_limit_sec }
+      return { slot, question, answer, points, time_limit_sec, category }
     })
 
     for (let s = 1; s <= 16; s++) {
@@ -86,6 +90,7 @@ serve(async (req) => {
         answer: q.answer,
         points: q.points,
         time_limit_sec: q.time_limit_sec,
+        category: q.category, // ✅ NEW
       })),
     )
     if (insErr) return bad(`Insert failed: ${insErr.message}`, 500)

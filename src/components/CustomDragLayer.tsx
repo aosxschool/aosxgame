@@ -1,6 +1,7 @@
 import { useDragLayer } from 'react-dnd'
 import type { Team } from '../types'
 import { DND_TYPES, type TeamDragItem } from '../utils/dnd'
+import TeamAvatar from './TeamMascot';
 
 function getItemStyles(currentOffset: { x: number; y: number } | null) {
   if (!currentOffset) {
@@ -28,7 +29,7 @@ export default function CustomDragLayer(props: { teams: Team[] }) {
     <div className="dragLayer">
       <div className="dragLayerItem" style={getItemStyles(currentOffset)}>
         <div className="chip chipDragPreview" style={{ borderColor: team.color }}>
-          <span className="chipDot" style={{ background: team.color }} />
+          <TeamAvatar team={team}/>
           <span className="chipName">{team.name}</span>
           <span className="chipScore">{team.score}</span>
         </div>

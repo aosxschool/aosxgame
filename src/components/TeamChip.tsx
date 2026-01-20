@@ -3,6 +3,7 @@ import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 import type { Team } from '../types'
 import { DND_TYPES, type TeamDragItem } from '../utils/dnd'
+import TeamAvatar from './TeamMascot'
 
 export default function TeamChip(props: {
   team: Team
@@ -21,6 +22,8 @@ export default function TeamChip(props: {
     preview(getEmptyImage(), { captureDraggingState: true })
   }, [preview])
 
+  
+
   return (
     <button
       ref={dragRef}
@@ -32,7 +35,7 @@ export default function TeamChip(props: {
       }}
       onClick={props.onClick}
     >
-      <span className="chipDot" style={{ background: props.team.color }} />
+      <TeamAvatar team={props.team}/>
       <span className="chipName">{props.team.name}</span>
       <span className="chipScore">{props.team.score}</span>
     </button>

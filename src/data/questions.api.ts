@@ -17,5 +17,6 @@ export async function loadQuestions(gameCode: string): Promise<Question[]> {
     answer: q.answer,
     points: q.points,
     timeLimitSec: q.time_limit_sec,
+    category: q.category
   }))
 }

@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
-import type { GameCode, Screen, Team } from './types'
+import type { Screen, Team } from './types'
 import LobbyPage from './pages/LobbyPage'
 import GamePage from './pages/GamePage'
 import EndPage from './pages/EndPage'
@@ -8,7 +8,7 @@ import LeaderboardPage from './pages/LeaderboardPage'
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('lobby')
-  const [game, setGame] = useState<GameCode>('2a')
+  const [game, setGame] = useState<string>('')
   const [teams, setTeams] = useState<Team[]>([])
 
   const pageVariants = {

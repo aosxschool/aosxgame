@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import type { Team } from '../types'
 import { burstConfetti } from '../components/Confetti'
 import { sfx } from '../utils/sfx'
+import TeamAvatar from '../components/TeamMascot'
 
 export default function EndPage(props: {
   teams: Team[]
@@ -16,6 +17,7 @@ export default function EndPage(props: {
     burstConfetti()
     sfx.bonus()
   }, [])
+
 
   return (
     <div className="page endPage">
@@ -35,6 +37,8 @@ export default function EndPage(props: {
             transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.2 }}
           >
             <div className="podiumRank">2</div>
+            <TeamAvatar team={props.teams[1]} size={100}/>
+
             <div className="podiumTeam" style={{ borderColor: podium[1].color }}>
               <span className="podiumDot" style={{ background: podium[1].color }} />
               {podium[1].name}
@@ -52,6 +56,8 @@ export default function EndPage(props: {
             transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.4 }}
             onAnimationComplete={() => burstConfetti()}
           >
+            <div className="podiumCrown">👑</div>
+            <TeamAvatar team={props.teams[0]} size={100}/>
             <div className="podiumRank">1</div>
             <div className="podiumTeam" style={{ borderColor: podium[0].color }}>
               <span className="podiumDot" style={{ background: podium[0].color }} />
@@ -70,6 +76,7 @@ export default function EndPage(props: {
             transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.6 }}
           >
             <div className="podiumRank">3</div>
+            <TeamAvatar team={props.teams[2]} size={100}/>
             <div className="podiumTeam" style={{ borderColor: podium[2].color }}>
               <span className="podiumDot" style={{ background: podium[2].color }} />
               {podium[2].name}
@@ -87,9 +94,12 @@ export default function EndPage(props: {
             {rest.map((t, i) => (
               <div key={t.id} className="otherRow">
                 <div className="otherLeft">
-                  <span className="otherRank">{i + 4}</span>
+                  <span className="otherRank">{i + 4}
+                  </span>
                   <span className="otherDot" style={{ background: t.color }} />
-                  <span className="otherName">{t.name}</span>
+                  <span className="otherName">{t.name}
+                    <TeamAvatar team={props.teams[i]}/>
+                  </span>
                 </div>
                 <div className="otherScore">{t.score}</div>
               </div>

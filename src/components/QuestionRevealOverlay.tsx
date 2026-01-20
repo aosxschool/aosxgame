@@ -35,7 +35,7 @@ export default function QuestionRevealOverlay(props: {
             }}
           >
             <div className="revealPts">{props.tile.question.points} pts</div>
-            <div className="revealQ">{props.tile.question.question}</div>
+            <div className="revealQ">{props.tile.question.category}</div>
 
             {claimedTeam && (
               <div className="revealOwner" style={{ borderColor: claimedTeam.color }}>

@@ -12,13 +12,24 @@ import { sfx } from '../utils/sfx'
 import { loadQuestions } from '../data/questions.api'
 import { useEffect } from 'react'
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 async function buildBoardFromDB(game: string): Promise<Tile[]> {
   const qs = await loadQuestions(game)
   console.log(qs)
   if (qs.length !== 16) throw new Error("This game does not have exactly 16 questions")
-  return qs.map((q, idx) => ({ id: `tile-${idx}`, question: q }))
-}
 
+  const shuffled = shuffle(qs)
+
+  return shuffled.map((q, idx) => ({ id: `tile-${idx}`, question: q }))
+}
 
 function recomputeTeams(teams: Team[], tiles: Tile[]): Team[] {
   const baseByTeam = new Map<string, number>()
@@ -95,7 +106,7 @@ export default function GamePage(props: {
     if (!tile) return
 
     sfx.wrong()
-    setActiveTileIndex(null) // ❗ wrong closes immediately
+    setActiveTileIndex(null) //  wrong closes immediately
   }
 
   const markCorrect = () => {
@@ -158,7 +169,7 @@ export default function GamePage(props: {
       <div className="topbar">
         <div className="topLeft">
           <div className="badge">LIVE</div>
-          <div className="topTitle">Game {props.game.toUpperCase()}</div>
+          <div className="topTitle">Game {props.game.toUpperCase().replace(/_/g, ' ')}</div>
           <div className="topSub">
             {usedTiles}/16 tiles claimed • Drag a team onto an empty tile to answer (locked after correct)
           </div>
@@ -168,7 +179,6 @@ export default function GamePage(props: {
           <button className="btn danger" onClick={endGame}>End Game</button>
         </div>
       </div>
-
       <TeamChipsBar teams={teams} selectedTeamId={selectedTeamId} onSelect={setSelectedTeamId} />
 
       <BingoBoard tiles={tiles} teams={teams} onTileDropTeam={onTileDropTeam} />
