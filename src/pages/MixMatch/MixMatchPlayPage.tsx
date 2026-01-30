@@ -1,49 +1,102 @@
+// src/pages/Team/MixMatch/MixMatchPlayPage.tsx
 import { useEffect, useMemo, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import type { Team, MixMatchPuzzle } from "../../types";
+
 import MixMatchBoard from "../../components/MixMatch/MixMatchBoard";
 import MixMatchOptionBank from "../../components/MixMatch/MixMatchOptionBank";
 import MixMatchTopBar from "../../components/MixMatch/MixMatchTopBar";
-import type { MixMatchPuzzle } from "../../types";
+
 import { buildInitialState, evaluateSubmission } from "../../utils/mixMatch";
 import { useMixMatchTimer } from "./useMixMatchTimer";
-import { DEMO_MIXMATCH_5X5 } from "../../data/mixMatchData";
+import { loadMixMatchPuzzle } from "../../data/mixmatch.api";
+
+import { AnimatePresence, motion } from "framer-motion";
+
 
 type OptionMark = "correct" | "wrong";
 
-export default function MixMatchPlayPage(props: {
-  navigate: (to: string) => void;
-  gameId: "mixmatch";
-}) {
-  const puzzle: MixMatchPuzzle = DEMO_MIXMATCH_5X5;
+type LocationState = {
+  teams: Team[];        // lobby will pass one team
+  topicCode: string;    // "bvm" | "mod1"
+};
 
-  const [state, setState] = useState(() => buildInitialState(puzzle));
-  const [submitted, setSubmitted] = useState(false);
+export default function MixMatchPlayPage(props: { navigate: (to: string) => void; gameId: 'mixmatch'  }) {
+  const loc = useLocation();
+  const navState = loc.state as LocationState | null;
 
-  // optionId -> correct/wrong (only meaningful after submit)
-  const [optionStatus, setOptionStatus] = useState<Record<string, OptionMark>>({});
+  if (!navState || !navState?.teams?.length || !navState.topicCode) return <Navigate to="/home" replace />;
+
+  const {teams, topicCode} = navState
+  const team = teams[0];const [activeTeamId, setActiveTeamId] = useState<string>(navState.teams[0]?.id ?? "");
+
+  const [puzzle, setPuzzle] = useState<MixMatchPuzzle | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
 
   const timer = useMixMatchTimer();
 
-  // optionId -> label (for showing "Apple" instead of id)
+  const [state, setState] = useState<{ placements: Record<string, string[]> } | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  const [optionStatus, setOptionStatus] = useState<Record<string, OptionMark>>({});
+
+  const [showResult, setShowResult] = useState(false);
+
+
+  // Load puzzle from Supabase
+  useEffect(() => {
+    let cancelled = false;
+
+    async function run() {
+      setLoading(true);
+      setErr(null);
+      try {
+        const p = await loadMixMatchPuzzle(topicCode);
+        if (cancelled) return;
+        setPuzzle(p);
+        setState(buildInitialState(p));
+      } catch (e: any) {
+        if (cancelled) return;
+        setErr(String(e?.message ?? e));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [topicCode]);
+
+  // quick lookup: optionId -> label
   const optionLabelById = useMemo(() => {
     const m: Record<string, string> = {};
+    if (!puzzle) return m;
     for (const o of puzzle.options) m[o.id] = o.label;
     return m;
-  }, [puzzle.options]);
+  }, [puzzle]);
 
-  // placed options (Set)
+  // placed ids set for option bank
   const placedOptionIds = useMemo(() => {
     const s = new Set<string>();
+    if (!state) return s;
     Object.values(state.placements).forEach((ids) => ids.forEach((id) => s.add(id)));
     return s;
-  }, [state.placements]);
+  }, [state]);
 
-  // ✅ can submit only if ALL options are placed somewhere
-  const canSubmit = placedOptionIds.size === puzzle.options.length;
+  // must be 1 option in each tile to enable submit (NOT all 35 used)
+  const canSubmit = useMemo(() => {
+    if (!puzzle || !state) return false;
+    return puzzle.tiles.every((t) => (state.placements[t.id]?.length ?? 0) === 1);
+  }, [puzzle, state]);
 
+  // evaluate only after submit
   const evalResult = useMemo(() => {
-    if (!submitted) return null;
+    if (!submitted || !puzzle || !state) return null;
     return evaluateSubmission(puzzle, state.placements);
-  }, [submitted, puzzle, state.placements]);
+  }, [submitted, puzzle, state]);
 
   const allCorrect = !!evalResult?.allCorrect;
 
@@ -51,59 +104,96 @@ export default function MixMatchPlayPage(props: {
     if (allCorrect) timer.stop();
   }, [allCorrect, timer]);
 
-  // keep green, clear red
-  function clearWrongMarksOnly() {
+  function keepGreenClearRed() {
     setOptionStatus((prev) => {
       const next: Record<string, OptionMark> = {};
-      for (const [k, v] of Object.entries(prev)) if (v === "correct") next[k] = "correct";
+      for (const [id, mark] of Object.entries(prev)) {
+        if (mark === "correct") next[id] = "correct";
+      }
       return next;
     });
   }
 
-  function onDropOption(tileId: string, optionId: string) {
-    timer.startIfNeeded();
-    clearWrongMarksOnly();
-
-    setState((prev) => {
-      const cur = prev.placements[tileId] ?? [];
-      if (cur.includes(optionId)) return prev;
-
-      return {
-        ...prev,
-        placements: {
-          ...prev.placements,
-          [tileId]: [...cur, optionId],
-        },
-      };
-    });
+  // find which tile currently has an option
+  function findTileContaining(optionId: string): string | null {
+    if (!state) return null;
+    for (const [tileId, ids] of Object.entries(state.placements)) {
+      if (ids.includes(optionId)) return tileId;
+    }
+    return null;
   }
 
+  function isLockedGreen(optionId: string) {
+    return optionStatus[optionId] === "correct";
+  }
+
+  function onDropOption(toTileId: string, optionId: string) {
+    if (!puzzle || !state) return;
+    timer.startIfNeeded();
+
+    // If green locked, do nothing
+    if (isLockedGreen(optionId)) return;
+
+    // any move clears red marks until next submit
+    keepGreenClearRed();
+
+    setState((prev) => {
+      if (!prev) return prev;
+
+      const fromTileId = findTileContaining(optionId);
+      const nextPlacements = { ...prev.placements };
+
+      // remove from previous tile if exists
+      if (fromTileId) {
+        nextPlacements[fromTileId] = (nextPlacements[fromTileId] ?? []).filter((x) => x !== optionId);
+      }
+
+      // each tile should hold only ONE option now
+      // replace existing (if any) by moving it back to "unplaced"
+      nextPlacements[toTileId] = [optionId];
+
+      return { ...prev, placements: nextPlacements };
+    });
+  }
+  
   function onMoveOption(fromTileId: string, toTileId: string, optionId: string) {
+  if (!puzzle || !state) return;
+
+  if (optionStatus[optionId] === "correct") return;
+
+  timer.startIfNeeded();
+
+  keepGreenClearRed();
+
+  setState((prev) => {
+    if (!prev) return prev;
+
+    const nextPlacements = { ...prev.placements };
+
+    nextPlacements[fromTileId] = (nextPlacements[fromTileId] ?? []).filter(
+      (x) => x !== optionId
+    );
+
+    nextPlacements[toTileId] = [optionId];
+
+    return {
+      ...prev,
+      placements: nextPlacements,
+    };
+  });
+}
+
+  function onRemoveOption(tileId: string, optionId: string) {
+    if (!state) return;
     timer.startIfNeeded();
-    clearWrongMarksOnly();
+
+    // don't allow removing green locked
+    if (isLockedGreen(optionId)) return;
+
+    keepGreenClearRed();
 
     setState((prev) => {
-      const from = prev.placements[fromTileId] ?? [];
-      const to = prev.placements[toTileId] ?? [];
-
-      const nextFrom = from.filter((x) => x !== optionId);
-      const nextTo = to.includes(optionId) ? to : [...to, optionId];
-
-      return {
-        ...prev,
-        placements: {
-          ...prev.placements,
-          [fromTileId]: nextFrom,
-          [toTileId]: nextTo,
-        },
-      };
-    });
-  }
-
-  function removeFromTile(tileId: string, optionId: string) {
-    timer.startIfNeeded();
-
-    setState((prev) => {
+      if (!prev) return prev;
       const cur = prev.placements[tileId] ?? [];
       return {
         ...prev,
@@ -116,82 +206,141 @@ export default function MixMatchPlayPage(props: {
   }
 
   function resetAll() {
+    if (!puzzle) return;
     setSubmitted(false);
     setOptionStatus({});
-    timer.reset();
     setState(buildInitialState(puzzle));
   }
 
   function onSubmit() {
+    if (!puzzle || !state) return;
     timer.startIfNeeded();
 
-    const result = evaluateSubmission(puzzle, state.placements);
+    let wrongCount = 0;
 
-    // +5s penalty if not all correct
-    if (!result.allCorrect) {
-      if ("addPenaltySeconds" in timer) (timer as any).addPenaltySeconds(5);
-      else if ("addPenaltyMs" in timer) (timer as any).addPenaltyMs(5000);
+    for (const tile of puzzle.tiles) {
+      const placed = state.placements[tile.id] ?? [];
+      const correctId = tile.requiredOptionIds[0];
+
+      if (placed.length !== 1 || placed[0] !== correctId) {
+        wrongCount += 1;
+      }
     }
 
-    // ✅ FIX: build optionStatus from result.tileOptionStatus (flatten)
-    const next: Record<string, OptionMark> = {};
-    for (const tileId of Object.keys(result.tileOptionStatus)) {
-      const perTile = result.tileOptionStatus[tileId] ?? {};
-      for (const [optId, mark] of Object.entries(perTile)) next[optId] = mark;
+    if (wrongCount > 0) {
+      timer.addPenaltySeconds(wrongCount * 5);
+    }
+
+    const next: Record<string, "correct" | "wrong"> = {};
+
+    for (const tile of puzzle.tiles) {
+      const placed = state.placements[tile.id] ?? [];
+      const correctId = tile.requiredOptionIds[0];
+
+      if (placed.length === 1) {
+        next[placed[0]] = placed[0] === correctId ? "correct" : "wrong";
+      }
     }
 
     setOptionStatus(next);
     setSubmitted(true);
+    setShowResult(true);
+  }
+
+
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="loader">Loading Mix & Match…</div>
+      </div>
+    );
+  }
+
+  if (err || !puzzle || !state) {
+    return (
+      <div className="page">
+        <div className="hint">Failed: {err ?? "No puzzle loaded"}</div>
+      </div>
+    );
   }
 
   return (
-    <div className="page">
-      <MixMatchTopBar
-        title="Mix & Match"
-        subtitle={
-          allCorrect
-            ? `✅ Completed in ${timer.formatted}`
-            : canSubmit
-              ? "All options placed. Submit to check."
-              : "Drag options onto tiles. Submit unlocks after all options are used."
-        }
-        canSubmit={canSubmit && !allCorrect}
-        onSubmit={onSubmit}
-        onReset={resetAll}
-        submitted={submitted}
-        allCorrect={allCorrect}
-        timeLabel={timer.formatted}
+    <div className="game-root">
+      <MixMatchOptionBank
+        options={puzzle.options}
+        started={timer.started}
+        placedOptionIds={placedOptionIds}
+        optionStatus={submitted ? optionStatus : undefined}
       />
-
-      <div className="mixMatchLayout">
-        <div className="mixMatchLeft">
-          <MixMatchOptionBank
-            options={puzzle.options}
-            started={timer.started}
-            placedOptionIds={placedOptionIds}
-            optionStatus={submitted ? optionStatus : undefined}
+      
+      <div className="mixMatchRight">
+        <MixMatchTopBar
+          title="Mix & Match"
+          subtitle={
+            allCorrect
+              ? `✅ ${team.name} finished in ${timer.formatted}`
+              : `Drag options onto tiles. Submit to check.`
+          }
+          timeLabel={timer.formatted}
+          submitted={submitted}
+          allCorrect={allCorrect}
+          canSubmit={!allCorrect && canSubmit}
+          onSubmit={onSubmit}
+          onReset={resetAll}
+          teams={navState.teams}
+          selectedTeamId={activeTeamId}
+          onSelectTeam={setActiveTeamId}
           />
-        </div>
+          
+        <MixMatchBoard
+          puzzle={puzzle}
+          placements={state.placements}
+          submitted={submitted}
+          optionStatus={submitted ? optionStatus : undefined}
+          optionLabelById={optionLabelById}
+          onDropOption={onDropOption}
+          onMoveOption={onMoveOption}
+          onRemoveOption={onRemoveOption}
+        />
+        <AnimatePresence>
+          {showResult && (
+            <motion.div
+              className="mixMatchResultOverlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={() => setShowResult(false)} // click backdrop closes
+            >
+              <motion.div
+                className="mixMatchResultCard glow"
+                initial={{ y: 18, scale: 0.96, opacity: 0 }}
+                animate={{ y: 0, scale: 1, opacity: 1 }}
+                exit={{ y: 18, scale: 0.96, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                onClick={(e) => e.stopPropagation()} // prevent backdrop close
+              >
+                <button
+                  type="button"                
+                  className="mixMatchResultClose"
+                  onClick={(e) => {
+                    e.preventDefault();        
+                    e.stopPropagation();       
+                    setShowResult(false);
+                  }}
+                  aria-label="Close results"
+                >
+                  ✕
+                </button>
 
-        <div className="mixMatchRight">
-          <MixMatchBoard
-            puzzle={puzzle}
-            placements={state.placements}
-            submitted={submitted}
-            optionStatus={submitted ? optionStatus : undefined}
-            optionLabelById={optionLabelById}
-            onDropOption={onDropOption}
-            onMoveOption={onMoveOption}
-            onRemoveOption={removeFromTile}
-          />
-        </div>
+                <div className="mixMatchResultLabel">Result</div>
+                <div className="mixMatchResultTime">{timer.formatted}</div>
+                <div className="mixMatchResultHint">Penalties included</div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-
-      {allCorrect && (
-        <div className="hint" style={{ marginTop: 14 }}>
-          Final time: <b>{timer.formatted}</b>
-        </div>
-      )}
     </div>
   );
 }

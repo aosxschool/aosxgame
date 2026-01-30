@@ -14,7 +14,7 @@ export default function MixMatchOptionTile(props: {
     type: DND_OPTION,
     item: {
         optionId: props.optionId,
-        type: "MIXMATCH_OPTION"
+        type: "OPTION"
     } satisfies DragOptionItem,
     canDrag: !props.disabled,
     collect: (m) => ({ isDragging: m.isDragging() }),

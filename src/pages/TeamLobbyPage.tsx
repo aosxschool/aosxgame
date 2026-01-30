@@ -60,6 +60,8 @@ export default function LobbyPage(props: {
         .from(tg.topicsSource.table)
         .select(tg.topicsSource.column);
 
+      
+
       if (cancelled) return;
 
       if (error) {
@@ -101,6 +103,7 @@ export default function LobbyPage(props: {
       setTopicOptions(opts);
       setTopicCode((prev) => (prev && opts.some((o) => o.code === prev) ? prev : opts[0]?.code ?? ""));
       setLoading(false);
+      
     }
 
     loadTopics();
@@ -148,6 +151,8 @@ export default function LobbyPage(props: {
 
   const canStart = !loading && !err && !!topicCode && topicOptions.length > 0;
 
+
+  
   return (
     <div className="page">
       <div className="hero">
@@ -286,6 +291,9 @@ export default function LobbyPage(props: {
           </div>
         </GlowCard>
       </div>
+      
     </div>
+
+    
   );
 }

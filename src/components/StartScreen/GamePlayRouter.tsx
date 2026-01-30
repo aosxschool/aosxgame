@@ -48,6 +48,8 @@ export default function GamePlayRouter(props: { navigate: (to: string) => void }
         );
       case "category":
         return <CategoryPlayPage navigate={props.navigate} gameId="category"/>;
+      case "mixmatch":
+        return <MixMatchPlayPage navigate={props.navigate} gameId="mixmatch" />;
       default:
         return <Navigate to="/home" replace />;
     }
@@ -61,9 +63,8 @@ export default function GamePlayRouter(props: { navigate: (to: string) => void }
         return <CrosswordPage navigate={props.navigate} gameId="crossword" />;
       case "beaconpoints":
         return <BeaconPointsPage navigate={props.navigate} gameId="beaconpoints" />;
-      case "mixmatch":
-        return <MixMatchPlayPage navigate={props.navigate} gameId="mixmatch" />;
       default:
+
         return <Navigate to="/home" replace />;
     }
   }

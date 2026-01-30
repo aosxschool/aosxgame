@@ -9,12 +9,14 @@ export type TeamDragItem = {
 
 export const DND_TEAM = "TEAM";
 
-export const DND_OPTION = "MM_OPTION";
 export const DND_PLACED_OPTION = "MM_PLACED_OPTION";
+
+export const DND_OPTION = "OPTION";
 
 export type DragOptionItem = {
   type: typeof DND_OPTION;
   optionId: string;
+  fromTileId?: string;
 };
 
 export type DragPlacedOptionItem = {

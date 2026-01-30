@@ -16,24 +16,21 @@ function setEq(a: string[], b: string[]) {
 
 /**
  * Rules:
- * - A tile is “correct” only if the placed option IDs match required exactly (order irrelevant).
- * - Options placed but not required => wrong (red)
- * - Missing required => just “not correct yet”
- *
- * ALSO RETURNS:
- * - correctOptionIds / wrongOptionIds globally (for OptionBank + locking behavior)
+ * - An option is correct if it's placed in a tile that requires it.
+ * - An option is wrong if it's placed in a tile that DOES NOT require it.
+ * - A tile is “correct” only if placed ids exactly match required ids (order irrelevant).
  */
 export function evaluateSubmission(puzzle: MixMatchPuzzle, placements: PlacementMap): MixMatchEval {
   const tileOptionStatus: MixMatchEval["tileOptionStatus"] = {};
   const tileSummary: MixMatchEval["tileSummary"] = {};
 
-  const correctOptionIdsSet = new Set<string>();
-  const wrongOptionIdsSet = new Set<string>();
+  const correctOptionIds: string[] = [];
+  const wrongOptionIds: string[] = [];
 
   let allCorrect = true;
 
   for (const tile of puzzle.tiles) {
-    const required = tile.requiredOptionIds; // ✅ YOUR REAL FIELD
+    const required = tile.requiredOptionIds;
     const placed = placements[tile.id] ?? [];
     const requiredSet = new Set(required);
 
@@ -42,13 +39,10 @@ export function evaluateSubmission(puzzle: MixMatchPuzzle, placements: Placement
     for (const optId of placed) {
       const ok = requiredSet.has(optId);
       status[optId] = ok ? "correct" : "wrong";
-
-      // global sets (for highlighting/locking)
-      if (ok) correctOptionIdsSet.add(optId);
-      else wrongOptionIdsSet.add(optId);
+      if (ok) correctOptionIds.push(optId);
+      else wrongOptionIds.push(optId);
     }
 
-    // tile correctness = exact set match
     const tileCorrect = setEq(required, placed);
     if (!tileCorrect) allCorrect = false;
 
@@ -63,13 +57,14 @@ export function evaluateSubmission(puzzle: MixMatchPuzzle, placements: Placement
     };
   }
 
+  // IMPORTANT: remove duplicates (same option shouldn't appear twice, but safety)
+  const uniq = (arr: string[]) => Array.from(new Set(arr));
+
   return {
     allCorrect,
     tileOptionStatus,
     tileSummary,
-
-    // ✅ NEW (global)
-    correctOptionIds: Array.from(correctOptionIdsSet),
-    wrongOptionIds: Array.from(wrongOptionIdsSet),
+    correctOptionIds: uniq(correctOptionIds),
+    wrongOptionIds: uniq(wrongOptionIds),
   };
 }

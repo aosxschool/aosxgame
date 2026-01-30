@@ -1,65 +1,79 @@
 import type { MixMatchPuzzle } from "../types";
 
+const OPTIONS = [
+  { id: "o1", label: "FMA" },
+  { id: "o2", label: "Assess Base Situation" },
+  { id: "o3", label: "Indigo Tower" },
+  { id: "o4", label: "Estimated time to Arrival" },
+  { id: "o5", label: "Location? Facial Features? Attire? Holding anything?" },
+  { id: "o6", label: "Base Duty Officer" },
+  { id: "o7", label: "Salvage Tower" },
+  { id: "o8", label: "Runway Black" },
+  { id: "o9", label: "'Mayday' and 'Panday'" },
+  { id: "o10", label: "Size of pothole? Location? Number? Flying Restrictions?" },
+  { id: "o11", label: "AES" },
+  { id: "o12", label: "36 SCE" },
+  { id: "o13", label:"Aircraft callsign? Aircraft type? Number of aircraft? Position of aircraft? POB? Reasons for diversion? Sensitive equipment? Further diversion?",},
+  { id: "o14", label: "38 SCE" },
+  { id: "o15", label: "AcG Cell" },
+  { id: "o16", label: "2 Military Working Dogs" },
+  { id: "o17", label: "FP Cell" },
+  { id: "o18", label: "Location? Infrastructure damaged? Road blocked? Injured personnel? Size of tree?",},
+  { id: "o19", label: "Allocate Parking Bay" },
+  { id: "o20", label: "Activate contractors to fix things" },
+  { id: "o21", label: "Any aircraft in affected PDS? Injured personnel? SQN? Which PDS Door?",},
+  { id: "o22", label: "Location? Infrastructure damaged? Road blocked? Injured personnel? Signs of fire/smoke?",},
+  { id: "o23", label: "Aircraft callsign? Aircraft type? Number of aircraft? Which PDS door? Position of aircraft? POB? SQN?",},
+  { id: "o24", label: "3 Military Working Dogs" },
+  { id: "o25", label: "Initials" },
+  { id: "o26", label: "Location? Description? Any payload? Direction of heading?" },
+  { id: "o27", label: "Mindef Feedback Unit Hotline" },
+  { id: "o28", label: "Estimated time of Departure" },
+  { id: "o29", label: "Medical Centre" },
+  { id: "o30", label: "'Mayday' and 'Panpan'" },
+  { id: "o31", label: "Number of Cars" },
+  { id: "o32", label: "Size of pothole? Colour? Location? Depth?" },
+  { id: "o33", label: "Unauthorized Intrusion" },
+  { id: "o34", label: "PO Cell" },
+  { id: "o35", label: "BCP Coordinator" },
+] as const;
+
+// ✅ Only ONE “mapping” constant now
+const TILES: Array<{ title: string; answer: (typeof OPTIONS)[number]["id"] }> = [
+  { title: "How many AES dogs are activated to check for bombs", answer: "o16" },
+  { title: "Who is activated when there is a bomb?", answer: "o14" },
+  { title: "Who should we call when a bee hive is spotted?", answer: "o34" },
+  { title: "Who should we call when there is a fire outbreak?", answer: "o11" },
+  { title: "Definition of BDO?", answer: "o6" },
+  { title: "Who should we call when there is an injured personnel?", answer: "o29" },
+  { title: "What are the two emergency calls?", answer: "o30" },
+  { title: "Name of the tow-er to tow aircraft?", answer: "o7" },
+  { title: "Noise complaint direct to?", answer: "o27" },
+  { title: "Questions to ask for fallen tree?", answer: "o18" },
+  { title: "Questions to ask for diversion?", answer: "o13" },
+  { title: "Questions to ask for pothole?", answer: "o10" },
+  { title: "Size of fallen tree measured using?", answer: "o31" },
+  { title: "When is base lockdown required?", answer: "o33" },
+  { title: "Always ask caller for their?", answer: "o25" },
+  { title: "Questions to ask when drone spotted?", answer: "o26" },
+  { title: "Job scope of ACG Cell?", answer: "o19" },
+  { title: "Name of tow-er to tow vehicle?", answer: "o3" },
+  { title: "Questions to ask when suspicious personnel spotted?", answer: "o5" },
+  { title: "Job scope of PO Cell?", answer: "o20" },
+  { title: "Job scope of BDO?", answer: "o2" },
+  { title: "ETA stands for?", answer: "o4" },
+  { title: "Questions to ask for PDS?", answer: "o21" },
+  { title: "ETD stands for?", answer: "o28" },
+  { title: "Who should we always inform after receiving information?", answer: "o35" },
+];
+
 export const DEMO_MIXMATCH_5X5: MixMatchPuzzle = {
   id: "demo-5x5",
   size: 5,
-  options: [
-    // options
-    { id: "o1", label: "Apple" },
-    { id: "o2", label: "Banana" },
-    { id: "o3", label: "Orange" },
-    { id: "o4", label: "Car" },
-    { id: "o5", label: "Bus" },
-    { id: "o6", label: "Train" },
-    { id: "o7", label: "Dog" },
-    { id: "o8", label: "Cat" },
-    { id: "o9", label: "Fish" },
-    { id: "o10", label: "Red" },
-    { id: "o11", label: "Blue" },
-    { id: "o12", label: "Green" },
-
-    // fill out to at least cover all required options:
-    { id: "o13", label: "Chair" },
-    { id: "o14", label: "Table" },
-    { id: "o15", label: "Sofa" },
-    { id: "o16", label: "Guitar" },
-    { id: "o17", label: "Piano" },
-    { id: "o18", label: "Drums" },
-    { id: "o19", label: "Circle" },
-    { id: "o20", label: "Square" },
-    { id: "o21", label: "Triangle" },
-    { id: "o22", label: "Milk" },
-    { id: "o23", label: "Water" },
-    { id: "o24", label: "Juice" },
-    { id: "o25", label: "Coffee" },
-
-    // optional: decoys
-    { id: "d1", label: "Decoy 1" },
-    { id: "d2", label: "Decoy 2" },
-  ],
-  tiles: Array.from({ length: 25 }).map((_, i) => {
-    const id = `t${i + 1}`;
-    return {
-      id,
-      title: `Tile ${i + 1}`,
-      requiredOptionIds: ["o1"], // will overwrite below for variety
-    };
-  }).map((t, idx) => {
-    // create some tiles needing multiple options
-    const n = idx + 1;
-
-    // example patterns
-    if (n === 1) return { ...t, title: "Fruits", requiredOptionIds: ["o1", "o2", "o3"] };
-    if (n === 2) return { ...t, title: "Transport", requiredOptionIds: ["o4", "o5", "o6"] };
-    if (n === 3) return { ...t, title: "Pets", requiredOptionIds: ["o7", "o8"] };
-    if (n === 4) return { ...t, title: "Colors", requiredOptionIds: ["o10", "o11", "o12"] };
-    if (n === 5) return { ...t, title: "Furniture", requiredOptionIds: ["o13", "o14"] };
-    if (n === 6) return { ...t, title: "Instruments", requiredOptionIds: ["o16", "o17", "o18"] };
-    if (n === 7) return { ...t, title: "Shapes", requiredOptionIds: ["o19", "o20", "o21"] };
-    if (n === 8) return { ...t, title: "Drinks", requiredOptionIds: ["o22", "o23"] };
-
-    // rest single requirement (for demo)
-    const optionId = `o${((n - 1) % 25) + 1}`;
-    return { ...t, title: `Match ${optionId.toUpperCase()}`, requiredOptionIds: [optionId] };
-  }),
+  options: [...OPTIONS],
+  tiles: TILES.map((t, i) => ({
+    id: `t${i + 1}`,
+    title: t.title,
+    requiredOptionIds: [t.answer],
+  })),
 };

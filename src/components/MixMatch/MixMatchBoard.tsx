@@ -1,3 +1,4 @@
+// src/components/MixMatch/MixMatchBoard.tsx
 import type { MixMatchPuzzle, PlacementMap } from "../../types";
 import MixMatchTile from "./MixMatchTile";
 
@@ -6,7 +7,6 @@ type OptionMark = "correct" | "wrong";
 export default function MixMatchBoard(props: {
   puzzle: MixMatchPuzzle;
   placements: PlacementMap;
-
   submitted: boolean;
 
   optionStatus?: Record<string, OptionMark>;
@@ -17,9 +17,7 @@ export default function MixMatchBoard(props: {
   onRemoveOption: (tileId: string, optionId: string) => void;
 }) {
   return (
-    <div className="mixMatchBoardWrap glow">
-      <div className="cardTitle">Board</div>
-
+    <div className="mixMatchBoardWrap">
       <div className="mixMatchBoard">
         {props.puzzle.tiles.map((tile) => (
           <MixMatchTile
@@ -30,7 +28,7 @@ export default function MixMatchBoard(props: {
             optionStatus={props.optionStatus}
             optionLabelById={props.optionLabelById}
             onDropOption={props.onDropOption}
-            onMoveOption={props.onMoveOption}
+            onMoveOption={props.onMoveOption} 
             onRemoveOption={props.onRemoveOption}
           />
         ))}

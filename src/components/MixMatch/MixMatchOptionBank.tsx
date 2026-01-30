@@ -1,3 +1,4 @@
+// src/components/MixMatch/MixMatchOptionBank.tsx
 import { useMemo } from "react";
 import type { MixMatchOption } from "../../types";
 import MixMatchOptionChip from "./MixMatchOptionChip";
@@ -8,10 +9,7 @@ export default function MixMatchOptionBank(props: {
   options: MixMatchOption[];
   started: boolean;
 
-  // options currently placed on board
   placedOptionIds: Set<string>;
-
-  // optionId -> correct/wrong (after submit)
   optionStatus?: Record<string, OptionMark>;
 }) {
   const leftCount = useMemo(() => {
@@ -21,15 +19,13 @@ export default function MixMatchOptionBank(props: {
   }, [props.options, props.placedOptionIds]);
 
   return (
-    <div className="mixMatchBankWrap glow">
-      <div className="cardTitle">Options ({leftCount} left)</div>
+    <div className="options-panel" style={{width: "25%"}}>
+      <div className="options-title">Options ({leftCount} left)</div>
 
-      <div className="mixMatchBank">
+      <div className="options-list">
         {props.options.map((opt) => {
           const status = props.optionStatus?.[opt.id];
           const isPlaced = props.placedOptionIds.has(opt.id);
-
-          // ✅ green is locked. used is greyed/disabled
           const locked = status === "correct";
 
           return (

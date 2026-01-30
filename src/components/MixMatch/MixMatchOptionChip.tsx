@@ -1,3 +1,4 @@
+// src/components/MixMatch/MixMatchOptionChip.tsx
 import { useDrag } from "react-dnd";
 import type { MixMatchOption } from "../../types";
 import { DND_OPTION, type DragOptionItem } from "../../utils/dnd";
@@ -6,23 +7,23 @@ type OptionMark = "correct" | "wrong";
 
 export default function MixMatchOptionChip(props: {
   option: MixMatchOption;
-  disabled?: boolean; // used or locked
-  used?: boolean;     // grey styling for used
-  status?: OptionMark; // after submit
+  disabled?: boolean;
+  used?: boolean;
+  status?: OptionMark;
 }) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: DND_OPTION,
     item: { type: DND_OPTION, optionId: props.option.id } satisfies DragOptionItem,
-    canDrag: () => !props.disabled,
+    canDrag: !props.disabled,
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-  }));
+  }), [props.option.id, props.disabled]);
 
   const cls = [
-    "mixMatchOpt",
+    "option option-enabled",
     isDragging ? "mixMatchOptDragging" : "",
     props.used ? "mixMatchOptUsed" : "",
-    props.status === "correct" ? "mixMatchOptCorrect" : "",
-    props.status === "wrong" ? "mixMatchOptWrong" : "",
+    props.status === "correct" ? "mixMatchOptGood" : "",
+    props.status === "wrong" ? "mixMatchOptBad" : "",
     props.disabled ? "mixMatchOptDisabled" : "",
   ].join(" ");
 

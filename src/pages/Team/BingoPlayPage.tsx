@@ -23,7 +23,6 @@ function shuffle<T>(arr: T[]): T[] {
 
 async function buildBoardFromDB(game: string): Promise<Tile[]> {
   const qs = await loadQuestions(game)
-  console.log(qs)
   if (qs.length !== 16) throw new Error("This game does not have exactly 16 questions")
 
   const shuffled = shuffle(qs)

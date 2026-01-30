@@ -20,7 +20,7 @@ export type AppMode = TeamMode | "wfe"; // "aos" | "aosx" | "wfe"
  * - "mod_2a" -> "mod2a"
  * - "mod2a"  -> "mod2a"
  */
-export type TopicId = "avm" | "bvm" | "mod2a" | "mod2b" | "mod1";
+export type TopicId = "avm" | "bvm" | "mod2a" | "mod2b" | "mod1" | "mixmatchforaosx";
 
 export function normTopic(code: string) {
   return code
@@ -36,13 +36,14 @@ export const TOPIC_LABELS: Record<TopicId, string> = {
   mod2a: "MOD 2A",
   mod2b: "MOD 2B",
   mod1: "MOD 1",
+  mixmatchforaosx: "Mix Match For AOSX"
 };
 
 /* =========================
    TEAM GAMES
    ========================= */
 
-export type TeamGameId = "bingo" | "category";
+export type TeamGameId = "bingo" | "category" | "mixmatch";
 
 export type TeamGameMeta = {
   id: TeamGameId;
@@ -81,6 +82,17 @@ export const teamGames: Record<TeamGameId, TeamGameMeta> = {
     },
     startLabel: "Start",
   },
+
+  mixmatch: {
+    id: "mixmatch",
+    title: "Mix Match",
+    topicsSource: { table: "mixmatch_tiles", column: "game_code" },
+    allowedTopicsByMode: {
+      aos: ["bvm"],
+      aosx: ["mixmatchforaosx"],
+    },
+    startLabel: "Start",
+  },
 };
 
 /** ✅ Team-game route helpers */
@@ -95,7 +107,7 @@ export function tgPlayPath(mode: TeamMode, gameId: TeamGameId) {
    SINGLE-PLAYER GAMES
    ========================= */
 
-export type SinglePlayerGameId = "beaconpoints" | "crossword" | "mixmatch";
+export type SinglePlayerGameId = "beaconpoints" | "crossword";
 
 export type SinglePlayerGameMeta = {
   id: SinglePlayerGameId;
@@ -127,23 +139,6 @@ export const singlePlayerGames: Record<SinglePlayerGameId, SinglePlayerGameMeta>
     id: "crossword",
     mode: "wfe",
     title: "Crossword",
-    subtitle: "Instructions",
-    bullets: [
-      "Fill the crossword by typing letters into white squares.",
-      "Black squares are blocked and cannot be typed into.",
-      "Use Arrow Keys to move around the grid.",
-      "Press Tab to toggle direction (Across / Down).",
-      "Backspace clears a letter (press again to move back).",
-      "Fill all blanks before you can submit.",
-    ],
-    tip: "Tip: Click a square to focus it. Clicking the same square toggles direction.",
-    startLabel: "Begin",
-  },
-
-  mixmatch: {
-    id: "mixmatch",
-    mode: "aosx",
-    title: "Mix Match",
     subtitle: "Instructions",
     bullets: [
       "Fill the crossword by typing letters into white squares.",
@@ -210,7 +205,7 @@ export const APP_NAV: NavItem[] = [
       { label: "Beacon Point", to: spStartPath("aosx", "beaconpoints") },
       { label: "Bingo", to: tgLobbyPath("aosx", "bingo") },
       { label: "Category", to: tgLobbyPath("aosx", "category") },
-      { label: "Mix Match", to: spStartPath("aosx", "mixmatch") },
+      { label: "Mix Match", to: tgLobbyPath("aosx", "mixmatch") },
     ],
   },
 

@@ -477,7 +477,6 @@ body{
   color:white
 }
 .topTitle{
-  font-size: 22px;
   font-weight: 1000;
 }
 .topSub{
@@ -486,16 +485,12 @@ body{
 }
 .topRight{ display:flex; gap:10px; }
 
-.chipsBar{
-  margin: 10px 0 14px;
-}
-
 .chipsRow{
   display:flex;
   flex-wrap:wrap;
   gap: 10px;
   margin-top: 30px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .chip{
@@ -1677,6 +1672,7 @@ body{
   grid-template-columns: 1fr;
   gap: 8px;
   padding-right: 4px;
+  padding-bottom: 25px
 }
 
 .options-list, .option { pointer-events: auto; }
@@ -1755,14 +1751,20 @@ body{
 
 /* Timer pill */
 .map-timer {
-  font-size: 14px;            
   font-weight: 800;
   letter-spacing: 0.8px;
-  padding: 8px 22px;
+  padding: 5px 18px;
   border-radius: 10px;
   border: 1px solid #1e293b;
   color: black;
   background-color: white;
+  display: grid;
+  place-items: center;
+  margin-right: 20px;
+}
+
+.timer-group{
+  display: flex
 }
 
 
@@ -2247,21 +2249,21 @@ body{
 }
 
 .mixMatchBoardWrap {
-  padding: 14px;
+  padding: 0px 3% 0px 3%;
 }
 
 .mixMatchBoard {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  gap: 20px;
   margin-top: 10px;
 }
 
 .mixMatchTile {
   border-radius: 14px;
-  padding: 10px;
-  min-height: 120px;
-  background: rgba(255, 255, 255, 0.06);
+  padding: 12px;
+  height: 13vh;
+  background: rgba(255, 255, 255, 0.11);
   border: 1px solid rgba(255,255,255,0.12);
   display: flex;
   flex-direction: column;
@@ -2298,6 +2300,7 @@ body{
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  max-width: 20vw;
 }
 
 .mixMatchPlaceholder {
@@ -2334,8 +2337,10 @@ body{
 
 /* dragging effect */
 .mixMatchPlacedChipDragging {
-  opacity: 0.6;
-  transform: scale(0.96);
+ opacity: 0.45;
+  filter: brightness(1.15);
+  transform: scale(0.98);
+
 }
 
 .mixMatchTimerPill {
@@ -2355,8 +2360,7 @@ body{
 }
 
 .mixMatchTimerValue {
-  font-size: 14px;
-  font-weight: 900;
+  font-size: 16px;
 }
 
 
@@ -2422,12 +2426,13 @@ body{
 
 /* make ONLY the options list scroll */
 .mixMatchBank {
-  flex: 1;
   min-height: 0;              /* IMPORTANT */
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 6px;         /* space for scrollbar */
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 /* optional: keep the bank title sticky */
@@ -2463,4 +2468,66 @@ body{
 .mixMatchBank::-webkit-scrollbar-thumb {
   background: rgba(255,255,255,0.14);
   border-radius: 999px;
+}
+
+.mixMatchScore{
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background-color: #000;
+}
+
+/* ===== Result Overlay ===== */
+.mixMatchResultOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.mixMatchResultCard {
+  position: relative;
+  padding: 26px 30px;
+  border-radius: 16px;
+  background: rgba(20, 20, 20, 0.9);
+  text-align: center;
+  min-width: 260px;
+}
+
+.mixMatchResultLabel {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+
+.mixMatchResultTime {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.mixMatchResultHint {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 6px;
+}
+
+/* Close button */
+.mixMatchResultClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,0.75);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.mixMatchResultClose:hover {
+  color: white;
 }
