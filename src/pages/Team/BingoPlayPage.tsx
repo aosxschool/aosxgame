@@ -11,6 +11,7 @@ import { burstConfetti } from '../../utils/Confetti'
 import { sfx } from '../../utils/sfx'
 import { loadQuestions } from '../../data/bingo_questions.api'
 import { useEffect } from 'react'
+import EndPage from '../EndPage'
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -51,12 +52,9 @@ function recomputeTeams(teams: Team[], tiles: Tile[]): Team[] {
   }))
 }
 
-export default function GamePage(props: {
-  game: string
-  teams: Team[]
-  onEnd: (finalTeams: Team[]) => void
-}) {
+export default function BingoPlayPage(props: {game: string, teams: Team[],  navigate: (to: string) => void; gameId: "bingo" } ) {
   const [teams, setTeams] = useState<Team[]>(props.teams)
+  const [finalTeams, setFinalTeams] = useState<Team[]>([])
   const [tiles, setTiles] = useState<Tile[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -70,6 +68,7 @@ export default function GamePage(props: {
 
   const [selectedTeamId, setSelectedTeamId] = useState<string>(props.teams[0]?.id ?? '')
   const selectedTeam = useMemo(() => teams.find((t) => t.id === selectedTeamId) ?? null, [teams, selectedTeamId])
+  const [ended, setEnded] = useState(false)
 
   // Flow states (drop-only)
   const [activeTileIndex, setActiveTileIndex] = useState<number | null>(null)
@@ -134,8 +133,26 @@ export default function GamePage(props: {
 
   const endGame = () => {
     const sorted = [...teams].sort((a, b) => b.score - a.score)
-    props.onEnd(sorted)
+    setFinalTeams(sorted)
+    setEnded(true)
   }
+
+  useEffect(() => {
+  if (tiles.length !== 16) return
+  const allClaimed = tiles.every((t) => !!t.claimedByTeamId)
+  if (allClaimed && !ended) endGame()
+}, [tiles, ended])
+
+  if (ended) {
+      return (
+        <EndPage
+          teams={finalTeams}
+          onRestart={() => props.navigate("/home")}
+          onLeaderboard={() => props.navigate("/home")}
+        />
+      )
+    }
+  
 
   const onTileDropTeam = (idx: number, teamId: string) => {
     const tile = tiles[idx]

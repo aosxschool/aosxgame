@@ -40,11 +40,7 @@ export default function GamePlayRouter(props: { navigate: (to: string) => void }
     switch (g) {
       case "bingo":
         return (
-          <BingoPlayPage
-            game={String(topicCode)}
-            teams={teams}
-            onEnd={() => rrNavigate("/home")}
-          />
+          <BingoPlayPage game={String(topicCode)} teams={teams} navigate={props.navigate} gameId="bingo"/>
         );
       case "category":
         return <CategoryPlayPage navigate={props.navigate} gameId="category"/>;

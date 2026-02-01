@@ -67,7 +67,7 @@ export const teamGames: Record<TeamGameId, TeamGameMeta> = {
     topicsSource: { table: "bingo_questions", column: "game_code" },
     allowedTopicsByMode: {
       aos: ["avm"],
-      aosx: ["mod2a", "mod2b"],
+      aosx: ["mod2a"],
     },
     startLabel: "Start",
   },
@@ -88,7 +88,7 @@ export const teamGames: Record<TeamGameId, TeamGameMeta> = {
     title: "Mix Match",
     topicsSource: { table: "mixmatch_tiles", column: "game_code" },
     allowedTopicsByMode: {
-      aos: ["bvm"],
+      aos: [],
       aosx: ["mixmatchforaosx"],
     },
     startLabel: "Start",
@@ -182,6 +182,22 @@ export function isTeamGameId(x: string): x is TeamGameId {
    NAV (dynamic, matches your spec)
    ========================= */
 
+/*NAV SETTINGS
+
+AOS:
+- AOS BVM (Category)
+- AOS AVM (Bingo)
+
+AOSX: 
+- AOSX Mod 1 (Category)
+- AOSX Mod 2A.1 (Bingo)
+- AOSX Mod 2A.2 (Beacon Points)
+- AOSX Mod 2B (Physical Bingo Board)
+
+WFE:
+- WFE 1
+- WFE 2*/
+
 export type NavItem =
   | { type: "link"; label: string; to: string }
   | { type: "group"; label: string; items: { label: string; to: string }[] };
@@ -193,8 +209,8 @@ export const APP_NAV: NavItem[] = [
     type: "group",
     label: "AOS",
     items: [
-      { label: "Bingo", to: tgLobbyPath("aos", "bingo") },
-      { label: "Category", to: tgLobbyPath("aos", "category") },
+      { label: "AVM", to: tgLobbyPath("aos", "bingo") },
+      { label: "BVM", to: tgLobbyPath("aos", "category") },
     ],
   },
 
@@ -202,10 +218,10 @@ export const APP_NAV: NavItem[] = [
     type: "group",
     label: "AOSX",
     items: [
-      { label: "Beacon Point", to: spStartPath("aosx", "beaconpoints") },
-      { label: "Bingo", to: tgLobbyPath("aosx", "bingo") },
-      { label: "Category", to: tgLobbyPath("aosx", "category") },
-      { label: "Mix Match", to: tgLobbyPath("aosx", "mixmatch") },
+      { label: "Mod 1", to: tgLobbyPath("aosx", "category") },
+      { label: "Mod 2A.1", to: tgLobbyPath("aosx", "bingo") },
+      { label: "Mod 2A.2", to: spStartPath("aosx", "beaconpoints") },
+      { label: "Mod 2B", to: tgLobbyPath("aosx", "mixmatch") },
     ],
   },
 
@@ -213,7 +229,7 @@ export const APP_NAV: NavItem[] = [
     type: "group",
     label: "WFE",
     items: [
-      { label: "Crossword", to: spStartPath("wfe", "crossword") },
+      { label: "WFE 1", to: spStartPath("wfe", "crossword") },
       { label: "WFE 2", to: "/wfe/wfe2" }, // blank page for now
     ],
   },

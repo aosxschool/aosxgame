@@ -1,4 +1,3 @@
-import GameHost from '../GameHost'
 
 export default function CourseWFEPage(props: { navigate: (to: string) => void; gameId: 'game1' | 'game2' | 'game3' }) {
   return (
@@ -9,7 +8,6 @@ export default function CourseWFEPage(props: { navigate: (to: string) => void; g
             If you want each WFE game to preselect a specific game_code from the DB,
             we can map gameId -> game_code later without changing existing logic.
         */}
-        <GameHost withBackground={false} />
       </div>
     </div>
   )

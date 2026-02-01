@@ -109,7 +109,7 @@ export default function EndPage(props: {
       )}
 
       <div className="endActions">
-        <button className="btn" onClick={props.onRestart}>New Game</button>
+        <button className="btn" onClick={props.onRestart}>Back to home</button>
       </div>
     </div>
   )

@@ -38,8 +38,7 @@ export default function CategoryTile(props: {
       disabled={disabled && !props.onClickPick}
       title={disabled ? "Already used" : "Drop a team here"}
     >
-      <div className="catTilePts">{props.tile.points}</div>
-      <div className="catTileSub">{props.tile.category}</div>
+      <div className="catTilePts">{props.tile.points} PTS</div>
     </button>
   );
 }

@@ -1,10 +1,11 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Team } from "../../types";
 import { sfx } from "../../utils/sfx";
-import type { CategoryOptionKey, CategoryPhase } from "../../pages/Team/Category/categoryTypes";
-
-// ✅ reuse the exact Bingo dropdown component
-import TeamSelectDropdown from "../Team/TeamSelectDropdown";
+import type {
+  CategoryOptionKey,
+  CategoryPhase,
+} from "../../pages/Team/Category/categoryTypes";
 
 type RevealState = {
   correct: CategoryOptionKey;
@@ -17,14 +18,14 @@ type RevealState = {
 
 export default function CategoryQuestionModel(props: {
   open: boolean;
-  phase: Exclude<CategoryPhase, "board">; // "question" | "steal" | "reveal"
+  phase: Exclude<CategoryPhase, "board">;
   teams: Team[];
 
-  // question phase
+  // answering team (question phase)
   selectedTeamId: string;
-  onSelectTeam: (teamId: string) => void;
+  onSelectTeam: (teamId: string) => void; // kept for compatibility (not used in question phase)
 
-  // steal phase
+  // steal phase team
   armedTeamId: string | null;
   onArmTeam: (teamId: string) => void;
 
@@ -42,25 +43,55 @@ export default function CategoryQuestionModel(props: {
 
   onClose: () => void;
 }) {
-  const showTeamPicker = props.phase === "question" || props.phase === "steal";
+  const [teamMenuOpen, setTeamMenuOpen] = useState(false);
+  const teamPickerRef = useRef<HTMLDivElement | null>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!teamMenuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      const el = e.target as HTMLElement;
+      if (!teamPickerRef.current?.contains(el)) setTeamMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [teamMenuOpen]);
+
+  // ESC: close dropdown if open else close modal
+  useEffect(() => {
+    if (!props.open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (teamMenuOpen) setTeamMenuOpen(false);
+        else props.onClose();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [props.open, teamMenuOpen, props.onClose]);
+
+  // Reset dropdown when modal closes
+  useEffect(() => {
+    if (!props.open) setTeamMenuOpen(false);
+  }, [props.open]);
+
+  const answeringTeam = useMemo(
+    () => props.teams.find((t) => t.id === props.selectedTeamId) ?? null,
+    [props.teams, props.selectedTeamId]
+  );
+
+  const stealingTeam = useMemo(
+    () => props.teams.find((t) => t.id === (props.armedTeamId ?? "")) ?? null,
+    [props.teams, props.armedTeamId]
+  );
+
+  const showStealPicker = props.phase === "steal";
   const inReveal = props.phase === "reveal";
 
-  // ✅ which team the dropdown is controlling depends on phase
-  const dropdownTeamId =
-    props.phase === "steal" ? (props.armedTeamId ?? "") : props.selectedTeamId;
-
-  const onChangeDropdownTeam = (teamId: string) => {
-    if (props.phase === "steal") props.onArmTeam(teamId);
-    else props.onSelectTeam(teamId);
-  };
-
-  // ✅ disable options until a team is chosen (steal requires armedTeamId)
-  const canAnswer =
-    props.phase === "question"
-      ? !!props.selectedTeamId
-      : props.phase === "steal"
-        ? !!props.armedTeamId
-        : false;
+  function pickStealTeam(id: string) {
+    props.onArmTeam(id);
+    setTeamMenuOpen(false);
+  }
 
   return (
     <AnimatePresence>
@@ -70,7 +101,10 @@ export default function CategoryQuestionModel(props: {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={() => {}} // do not close on backdrop click
+          onClick={() => {
+            sfx.tap();
+            props.onClose();
+          }}
         >
           <motion.div
             className="modal"
@@ -88,14 +122,13 @@ export default function CategoryQuestionModel(props: {
               </div>
 
               <button
-                className="btn ghost"
                 type="button"
+                className="btn ghost"
                 onClick={() => {
                   sfx.tap();
                   props.onClose();
                 }}
                 aria-label="Close"
-                title="Close"
               >
                 ✕
               </button>
@@ -105,19 +138,104 @@ export default function CategoryQuestionModel(props: {
               <b>{props.category}</b>
             </div>
 
-            {/* ✅ Bingo dropdown reused */}
-            {showTeamPicker && (
+            {/* ✅ Question phase: NO dropdown, just show answering team */}
+            {props.phase === "question" && (
               <div className="modalTeamRow" style={{ marginTop: 14 }}>
-                <div className="modalTeamLabel">
-                  {props.phase === "steal" ? "Stealing team" : "Answering team"}
-                </div>
+                <div className="modalTeamLabel">Answering team</div>
 
-                <TeamSelectDropdown
-                  teams={props.teams}
-                  selectedTeamId={dropdownTeamId}
-                  onSelectTeam={onChangeDropdownTeam}
-                  label="Select team"
-                />
+                {/* Reuse the same "pill" look without dropdown */}
+                <div className="teamPicker">
+                  <div className="teamSelectPro" style={{ cursor: "default" }}>
+                    <span
+                      className="teamDot"
+                      style={{ background: answeringTeam?.color ?? "transparent" }}
+                      aria-hidden="true"
+                    />
+                    <span className="teamName">
+                      {answeringTeam?.name ?? "—"}
+                    </span>
+                    <span className="teamScore">
+                      {answeringTeam ? `${answeringTeam.score} pts` : ""}
+                    </span>
+                    {/* no arrow */}
+                    <span className="teamArrow" style={{ visibility: "hidden" }}>
+                      ▾
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ✅ Steal phase: Bingo-style dropdown */}
+            {showStealPicker && (
+              <div className="modalTeamRow" style={{ marginTop: 14 }}>
+                <div className="modalTeamLabel">Stealing team</div>
+
+                <div className="teamPicker" ref={teamPickerRef}>
+                  <button
+                    type="button"
+                    className="teamSelectPro"
+                    onClick={() => {
+                      sfx.tap();
+                      setTeamMenuOpen((o) => !o);
+                    }}
+                    aria-expanded={teamMenuOpen}
+                    aria-haspopup="listbox"
+                  >
+                    <span
+                      className="teamDot"
+                      style={{ background: stealingTeam?.color ?? "transparent" }}
+                      aria-hidden="true"
+                    />
+                    <span className="teamName">
+                      {stealingTeam?.name ?? "Select team"}
+                    </span>
+                    <span className="teamScore">
+                      {stealingTeam ? `${stealingTeam.score} pts` : ""}
+                    </span>
+                    <span className="teamArrow" aria-hidden="true">
+                      ▾
+                    </span>
+                  </button>
+
+                  <AnimatePresence>
+                    {teamMenuOpen && (
+                      <motion.div
+                        className="teamMenu"
+                        initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                        transition={{ duration: 0.16 }}
+                        role="listbox"
+                      >
+                        {props.teams.map((t) => {
+                          const active = t.id === props.armedTeamId;
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              className={`teamOption ${active ? "active" : ""}`}
+                              onClick={() => {
+                                sfx.tap();
+                                pickStealTeam(t.id);
+                              }}
+                              role="option"
+                              aria-selected={active}
+                            >
+                              <span
+                                className="teamDot"
+                                style={{ background: t.color }}
+                                aria-hidden="true"
+                              />
+                              <span className="teamName">{t.name}</span>
+                              <span className="teamScore">{t.score} pts</span>
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             )}
 
@@ -126,7 +244,7 @@ export default function CategoryQuestionModel(props: {
               {props.question}
             </div>
 
-            {/* Options OR Reveal */}
+            {/* Options or Reveal */}
             {!inReveal ? (
               <div className="catOptions" style={{ marginTop: 14 }}>
                 {(["A", "B", "C", "D"] as CategoryOptionKey[]).map((k) => (
@@ -137,9 +255,11 @@ export default function CategoryQuestionModel(props: {
                       sfx.tap();
                       props.onAnswer(k);
                     }}
-                    disabled={!canAnswer}
+                    // in steal phase, must pick steal team first
+                    disabled={props.phase === "steal" && !props.armedTeamId}
                     style={{
                       width: "100%",
+                      display: "flex",
                       justifyContent: "flex-start",
                       marginTop: 10,
                     }}
@@ -151,7 +271,9 @@ export default function CategoryQuestionModel(props: {
             ) : (
               <div className="modalAnswerBlock" style={{ marginTop: 14 }}>
                 <div className="modalAnswerLabel">Result</div>
-                <div className="modalAnswerText">{props.revealState?.message ?? ""}</div>
+                <div className="modalAnswerText">
+                  {props.revealState?.message ?? ""}
+                </div>
 
                 <div className="spacer" />
 
