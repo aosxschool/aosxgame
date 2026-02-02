@@ -20,7 +20,7 @@ export type AppMode = TeamMode | "wfe"; // "aos" | "aosx" | "wfe"
  * - "mod_2a" -> "mod2a"
  * - "mod2a"  -> "mod2a"
  */
-export type TopicId = "avm" | "bvm" | "mod2a" | "mod2b" | "mod1" | "mixmatchforaosx";
+export type TopicId = "avm" | "bvm" | "mod2a" | "mod2b" | "mod1" ;
 
 export function normTopic(code: string) {
   return code
@@ -36,7 +36,6 @@ export const TOPIC_LABELS: Record<TopicId, string> = {
   mod2a: "MOD 2A",
   mod2b: "MOD 2B",
   mod1: "MOD 1",
-  mixmatchforaosx: "Mix Match For AOSX"
 };
 
 /* =========================
@@ -89,7 +88,7 @@ export const teamGames: Record<TeamGameId, TeamGameMeta> = {
     topicsSource: { table: "mixmatch_tiles", column: "game_code" },
     allowedTopicsByMode: {
       aos: [],
-      aosx: ["mixmatchforaosx"],
+      aosx: ["mod2b"],
     },
     startLabel: "Start",
   },

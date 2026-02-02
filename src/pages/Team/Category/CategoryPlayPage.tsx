@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { useEffect, useState , useCallback, useRef} from "react";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import type { Team } from "../../../types";
 
 import { loadCategoryQuestions } from "../../../data/category_questions.api";
@@ -13,6 +13,9 @@ import type { CategoryTile } from "./categoryTypes";
 import { useCategoryGame } from "./useCategoryGame";
 
 import EndPage from "../../EndPage"
+
+import { saveAllTeams } from '../../../data/leaderboard.api'
+import { toLeaderboardFields } from "../../../data/leaderBoardConverter";
 
 type LocationState = {
   teams: Team[];
@@ -34,6 +37,25 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
 
   const topicCode = nav?.topicCode ?? ""
   const initialTeams = nav?.teams ?? []
+
+  const { mode } = useParams<{ mode: "aos" | "aosx" }>();
+  const endingRef = useRef(false);
+
+  const persistLeaderboard = useCallback(
+    async (finalTeams: Team[]) => {
+      if (!mode || !topicCode) return;
+
+      const { course, topic } = toLeaderboardFields(mode, topicCode);
+
+      await saveAllTeams(
+        course,
+        topic,
+        finalTeams.map((t) => ({ name: t.name, score: t.score }))
+      );
+    },
+    [mode, topicCode]
+  );
+
 
   useEffect(() => {
     if (!topicCode) return
@@ -83,11 +105,25 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
     tiles: builtTiles,
   })
 
-  function endGame() {
-    const sorted = [...game.teams].sort((a, b) => b.score - a.score)
-    setFinalTeams(sorted)
-    setEnded(true)
-  }
+  
+
+  const endGame = useCallback(async () => {
+    if (endingRef.current) return;     // ✅ prevents double-run
+    endingRef.current = true;
+
+    const sorted = [...game.teams].sort((a, b) => b.score - a.score);
+
+    try {
+      await persistLeaderboard(sorted);
+    } catch (e) {
+      console.error("Failed to save leaderboard:", e);
+      // If you want, allow retry:
+      // endingRef.current = false;
+    }
+
+    setFinalTeams(sorted);
+    setEnded(true);
+  }, [game.teams, persistLeaderboard]);
 
   useEffect(() => {
     if (ended) return

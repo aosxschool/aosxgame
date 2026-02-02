@@ -114,6 +114,7 @@ export function useMixMatchTimer() {
     started,
     running,
     formatted,
+    elapsedMs,
     startIfNeeded,
     stop,
     reset,

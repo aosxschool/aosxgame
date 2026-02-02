@@ -20,7 +20,6 @@ import CategoryPlayPage from "../../pages/Team/Category/CategoryPlayPage";
 
 export default function GamePlayRouter(props: { navigate: (to: string) => void }) {
   const { mode, gameId } = useParams<{ mode: string; gameId: string }>();
-  const rrNavigate = useNavigate();
   const location = useLocation();
 
   if (!mode || !gameId) return <Navigate to="/home" replace />;
