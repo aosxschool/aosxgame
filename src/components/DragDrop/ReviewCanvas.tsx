@@ -31,15 +31,15 @@ export default function ReviewCanvas({
         </div>
 
         <div style={{ display: "flex", gap: "12px" }}>
-          <button className="map-clear" onClick={onRetry}>
+          <button className="btn-pill" onClick={onRetry}>
             RETRY
           </button>
 
-          <button className="map-finish" onClick={onToggleCorrect}>
+          <button className="btn-pill" onClick={onToggleCorrect}>
             {showCorrect ? "BACK" : "VIEW CORRECT ANSWERS"}
           </button>
 
-          <button className="map-clear" onClick={() => setShowScore(true)}>
+          <button className="btn-pill" onClick={() => setShowScore(true)}>
             VIEW SCORE
           </button>
         </div>

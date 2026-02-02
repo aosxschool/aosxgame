@@ -28,11 +28,11 @@ export default function MapCanvas({
         <div className="map-timer">⏱ {time}s</div>
 
         <div style={{ display: "flex", gap: "20px" }}>
-          <button className="map-clear" onClick={onClear}>
+          <button className="btn-pill" onClick={onClear}>
             CLEAR
           </button>
 
-          <button className="map-finish" onClick={onFinish}>
+          <button className="btn-pill" onClick={onFinish}>
             FINISH
           </button>
         </div>

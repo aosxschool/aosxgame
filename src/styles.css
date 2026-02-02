@@ -1449,6 +1449,10 @@ body{
   background-color: white;
   color: rgba(10,14,20,0.85);
 }
+.btn-pill.active {
+  background-color: white;
+  color: rgba(10,14,20,0.85);
+}
 
 /* ===== Dropdowns ===== */
 .dropdown {
@@ -1652,7 +1656,6 @@ body{
   display: flex;
   flex-direction: column;
   position: relative;
-  z-index: 9999;
   pointer-events: auto
 }
 
@@ -1739,7 +1742,7 @@ body{
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 26px;
+  padding: 16px 30px;
   background: linear-gradient(180deg, #020617, #020617);
   border-bottom: 1px solid #1e293b;
 }
@@ -1766,35 +1769,6 @@ body{
 .timer-group{
   display: flex
 }
-
-
-/* Finish button */
-.map-finish {
-  padding: 8px 22px;
-  border: 2px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
-}
-
-
-.map-finish:hover {
-  background: linear-gradient(135deg,  #24e86c);
-  color: white;
-
-}
-
-
-.map-finish:active {
-  transform: translateY(1px);
-  box-shadow:
-    0 4px 12px rgba(37, 99, 235, 0.4),
-    inset 0 1px 0 rgba(255,255,255,0.1);
-}
-
 
 /* =========================
    MAP CANVAS
@@ -1970,34 +1944,6 @@ body{
 }
 
 /* =========================
-   Clear Items
-========================= */
-
-
-.map-clear {
-  padding: 8px 22px;
-  color: black;
-  border: 2px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  margin-right: 10px;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
-}
-
-.map-clear:hover {
-  color: white;
-  background: linear-gradient(135deg, #ff392b);
-}
-
-.map-clear:active {
-  transform: translateY(1px);
-}
-
-
-/* =========================
    RESPONSIVE
 ========================= */
 
@@ -2140,14 +2086,12 @@ body{
 }
 
 .catHeaderRow{
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
   gap: 20px;
   margin-bottom: 20px;
 }
 
 .catHeaderCell{
-  padding: 20px 12px;
+  padding: 9%;
   border-radius: 14px;
   font-weight: 900;
   text-transform: uppercase;
@@ -2169,7 +2113,7 @@ body{
 
 .catTile{
   border-radius: 14px;
-  padding: 18% 12px;
+  padding: 16%;
   border: 2px solid rgba(255, 255, 255, 0.137);
   background: rgba(0,0,0,0.20);
   cursor: pointer;
@@ -2537,4 +2481,104 @@ body{
 
 .mixMatchResultClose:hover {
   color: white;
+}
+
+/* =========================
+   Leaderboard
+   ========================= */
+
+.leaderboardPage {
+  max-width: 1100px;
+  margin: auto;
+  margin-top: 3%
+}
+
+/* header */
+.leaderHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.leaderTitle {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+/* tabs */
+.leaderTabs {
+  display: flex;
+  gap: 8px;
+}
+
+/* card */
+.leaderCard {
+  background: rgba(20, 20, 20, 0.75);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* table */
+.leaderTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.leaderTable th {
+  padding: 12px;
+  font-weight: 900;
+  color: white;
+  border-bottom: 1px solid #333;
+}
+
+.leaderTable td {
+  padding: 12px;
+  border-bottom: 1px solid #222;
+}
+
+.leaderTable tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* rank */
+.rank {
+  font-weight: 700;
+}
+
+/* team cell */
+.teamCell {
+  font-weight: 600;
+}
+
+.teamDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #4cafef;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+/* total highlight */
+.totalCol {
+  color: #ffd54f;
+}
+
+.totalScore {
+  font-weight: 800;
+  font-size: 18px;
+  color: #ffd54f;
+}
+
+.btn.clear{
+  border: 2px solid rgb(255, 77, 77)
+
+}
+
+.btn.clear:hover{
+  background-color: rgb(255, 77, 77);
 }

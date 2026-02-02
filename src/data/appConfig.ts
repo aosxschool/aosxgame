@@ -20,7 +20,7 @@ export type AppMode = TeamMode | "wfe"; // "aos" | "aosx" | "wfe"
  * - "mod_2a" -> "mod2a"
  * - "mod2a"  -> "mod2a"
  */
-export type TopicId = "avm" | "bvm" | "mod2a" | "mod2b" | "mod1" | "mixmatchforaosx";
+export type TopicId = "avm" | "bvm" | "mod2a" | "mod2b" | "mod1" ;
 
 export function normTopic(code: string) {
   return code
@@ -36,7 +36,6 @@ export const TOPIC_LABELS: Record<TopicId, string> = {
   mod2a: "MOD 2A",
   mod2b: "MOD 2B",
   mod1: "MOD 1",
-  mixmatchforaosx: "Mix Match For AOSX"
 };
 
 /* =========================
@@ -89,7 +88,7 @@ export const teamGames: Record<TeamGameId, TeamGameMeta> = {
     topicsSource: { table: "mixmatch_tiles", column: "game_code" },
     allowedTopicsByMode: {
       aos: [],
-      aosx: ["mixmatchforaosx"],
+      aosx: ["mod2b"],
     },
     startLabel: "Start",
   },
@@ -127,8 +126,8 @@ export const singlePlayerGames: Record<SinglePlayerGameId, SinglePlayerGameMeta>
     title: "Beacon Points",
     subtitle: "Instructions",
     bullets: [
-      "Read the instructions carefully before starting.",
-      "Follow the scenario objectives shown on screen.",
+      "Drag and drop the repective locations into their respective blanks",
+      "Replace tiles when necessary",
       "Submit only when all required inputs are filled.",
     ],
     tip: "Tip: Take your time to review before submitting.",
@@ -221,7 +220,7 @@ export const APP_NAV: NavItem[] = [
       { label: "Mod 1", to: tgLobbyPath("aosx", "category") },
       { label: "Mod 2A.1", to: tgLobbyPath("aosx", "bingo") },
       { label: "Mod 2A.2", to: spStartPath("aosx", "beaconpoints") },
-      { label: "Mod 2B", to: tgLobbyPath("aosx", "mixmatch") },
+      
     ],
   },
 
@@ -230,7 +229,7 @@ export const APP_NAV: NavItem[] = [
     label: "WFE",
     items: [
       { label: "WFE 1", to: spStartPath("wfe", "crossword") },
-      { label: "WFE 2", to: "/wfe/wfe2" }, // blank page for now
+      { label: "WFE 2", to: tgLobbyPath("aosx", "mixmatch") },
     ],
   },
 ];

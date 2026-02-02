@@ -25,6 +25,7 @@ export default function MixMatchTopBar(props: {
   props.onSelectTeam;
   return (
     <div className="map-header" style={{background: "none", border:"none"}}>
+      
       {showTeams && (
         <div className="mixMatchTopTeams">
           <TeamChipsBar
