@@ -1,6 +1,8 @@
 // src/pages/Team/MixMatch/MixMatchPlayPage.tsx
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Navigate, useLocation, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import type { Team, MixMatchPuzzle } from "../../types";
 
 import MixMatchBoard from "../../components/MixMatch/MixMatchBoard";
@@ -13,6 +15,8 @@ import { loadMixMatchPuzzle } from "../../data/mixmatch.api";
 
 import { AnimatePresence, motion } from "framer-motion";
 
+import { saveAllTeams } from "../../data/leaderboard.api";
+import { toLeaderboardFields } from "../../data/leaderBoardConverter";
 import { saveAllTeams } from "../../data/leaderboard.api";
 import { toLeaderboardFields } from "../../data/leaderBoardConverter";
 
@@ -28,13 +32,30 @@ const BASE_SECONDS = 600; // ✅ baseline: 10 minutes
 function timeToScore(timeSeconds: number) {
   return Math.max(0, BASE_SECONDS - timeSeconds);
 }
+  teams: Team[];
+  topicCode: string;
+};
 
+const BASE_SECONDS = 600; // ✅ baseline: 10 minutes
+
+function timeToScore(timeSeconds: number) {
+  return Math.max(0, BASE_SECONDS - timeSeconds);
+}
+
+export default function MixMatchPlayPage(props: {
+  navigate: (to: string) => void;
+  gameId: "mixmatch";
+}) {
 export default function MixMatchPlayPage(props: {
   navigate: (to: string) => void;
   gameId: "mixmatch";
 }) {
   const loc = useLocation();
   const navState = loc.state as LocationState | null;
+  const { mode } = useParams<{ mode: "aos" | "aosx" }>();
+
+  // ✅ hooks must run regardless of navState
+  const [activeTeamId, setActiveTeamId] = useState<string>(() => navState?.teams?.[0]?.id ?? "");
   const { mode } = useParams<{ mode: "aos" | "aosx" }>();
 
   // ✅ hooks must run regardless of navState
@@ -65,7 +86,23 @@ export default function MixMatchPlayPage(props: {
   useEffect(() => {
     setActiveTeamId(teams[0]?.id ?? "");
   }, [teams]);
+  // ✅ prevent double save
+  const savedRef = useRef(false);
 
+  // ✅ after hooks, do redirect
+  if (!navState?.teams?.length || !navState.topicCode) {
+    return <Navigate to="/home" replace />;
+  }
+
+  const { teams, topicCode } = navState;
+  const team = teams[0];
+
+  // keep activeTeamId in sync when coming from lobby
+  useEffect(() => {
+    setActiveTeamId(teams[0]?.id ?? "");
+  }, [teams]);
+
+  // Load puzzle
   // Load puzzle
   useEffect(() => {
     let cancelled = false;
@@ -143,6 +180,27 @@ export default function MixMatchPlayPage(props: {
   }, [allCorrect, mode, topicCode, team.name, timer.elapsedMs]);
 
   const keepGreenClearRed = useCallback(() => {
+  // ✅ SAVE to leaderboard once when completed
+  useEffect(() => {
+    if (!allCorrect) return;
+    if (!mode) return;
+    if (savedRef.current) return;
+
+    savedRef.current = true;
+
+    const { course, topic } = toLeaderboardFields(mode, topicCode);
+
+    const timeSeconds = Math.floor((timer.elapsedMs ?? 0) / 1000);
+    const score = timeToScore(timeSeconds);
+
+    saveAllTeams(course, topic, [{ name: team.name, score }]).catch((e) => {
+      console.error("Failed saving MixMatch leaderboard:", e);
+      // allow retry if needed:
+      savedRef.current = false;
+    });
+  }, [allCorrect, mode, topicCode, team.name, timer.elapsedMs]);
+
+  const keepGreenClearRed = useCallback(() => {
     setOptionStatus((prev) => {
       const next: Record<string, OptionMark> = {};
       for (const [id, mark] of Object.entries(prev)) {
@@ -151,7 +209,23 @@ export default function MixMatchPlayPage(props: {
       return next;
     });
   }, []);
+  }, []);
 
+  const isLockedGreen = useCallback(
+    (optionId: string) => optionStatus[optionId] === "correct",
+    [optionStatus]
+  );
+
+  const findTileContaining = useCallback(
+    (optionId: string): string | null => {
+      if (!state) return null;
+      for (const [tileId, ids] of Object.entries(state.placements)) {
+        if (ids.includes(optionId)) return tileId;
+      }
+      return null;
+    },
+    [state]
+  );
   const isLockedGreen = useCallback(
     (optionId: string) => optionStatus[optionId] === "correct",
     [optionStatus]
@@ -191,20 +265,33 @@ export default function MixMatchPlayPage(props: {
     });
   }
 
+
   function onMoveOption(fromTileId: string, toTileId: string, optionId: string) {
+    if (!puzzle || !state) return;
+    if (isLockedGreen(optionId)) return;
     if (!puzzle || !state) return;
     if (isLockedGreen(optionId)) return;
 
     timer.startIfNeeded();
     keepGreenClearRed();
+    timer.startIfNeeded();
+    keepGreenClearRed();
 
+    setState((prev) => {
+      if (!prev) return prev;
     setState((prev) => {
       if (!prev) return prev;
 
       const nextPlacements = { ...prev.placements };
       nextPlacements[fromTileId] = (nextPlacements[fromTileId] ?? []).filter((x) => x !== optionId);
       nextPlacements[toTileId] = [optionId];
+      const nextPlacements = { ...prev.placements };
+      nextPlacements[fromTileId] = (nextPlacements[fromTileId] ?? []).filter((x) => x !== optionId);
+      nextPlacements[toTileId] = [optionId];
 
+      return { ...prev, placements: nextPlacements };
+    });
+  }
       return { ...prev, placements: nextPlacements };
     });
   }
@@ -262,6 +349,33 @@ export default function MixMatchPlayPage(props: {
   setOptionStatus({});
 }
 
+    // ✅ per your earlier requirement: DON'T reset timer here
+    // also allow saving again for a new run:
+    savedRef.current = false;
+  }
+
+  function autoFillAllCorrect() {
+  if (!puzzle) return;
+
+  // start timer so submit works the same way
+  timer.startIfNeeded();
+
+  // fill every tile with its correct option id
+  const placements: Record<string, string[]> = {};
+  for (const t of puzzle.tiles) {
+    placements[t.id] = [t.requiredOptionIds[0]];
+  }
+
+  setState({ placements });
+
+  // optional: clear red marks but keep greens (makes testing cleaner)
+  keepGreenClearRed();
+
+  // optional: if you want this to count as a "new attempt"
+  setSubmitted(false);
+  setOptionStatus({});
+}
+
 
   function onSubmit() {
     if (!puzzle || !state) return;
@@ -273,14 +387,18 @@ export default function MixMatchPlayPage(props: {
       const placed = state.placements[tile.id] ?? [];
       const correctId = tile.requiredOptionIds[0];
       if (placed.length !== 1 || placed[0] !== correctId) wrongCount += 1;
+      if (placed.length !== 1 || placed[0] !== correctId) wrongCount += 1;
     }
 
     if (wrongCount > 0) timer.addPenaltySeconds(wrongCount * 5);
+    if (wrongCount > 0) timer.addPenaltySeconds(wrongCount * 5);
 
+    const next: Record<string, OptionMark> = {};
     const next: Record<string, OptionMark> = {};
     for (const tile of puzzle.tiles) {
       const placed = state.placements[tile.id] ?? [];
       const correctId = tile.requiredOptionIds[0];
+      if (placed.length === 1) next[placed[0]] = placed[0] === correctId ? "correct" : "wrong";
       if (placed.length === 1) next[placed[0]] = placed[0] === correctId ? "correct" : "wrong";
     }
 
@@ -308,6 +426,9 @@ export default function MixMatchPlayPage(props: {
   const timeSeconds = Math.floor((timer.elapsedMs ?? 0) / 1000);
   const scorePreview = timeToScore(timeSeconds);
 
+  const timeSeconds = Math.floor((timer.elapsedMs ?? 0) / 1000);
+  const scorePreview = timeToScore(timeSeconds);
+
   return (
     <div className="game-root">
       <MixMatchOptionBank
@@ -317,8 +438,10 @@ export default function MixMatchPlayPage(props: {
         optionStatus={submitted ? optionStatus : undefined}
       />
 
+
       <div className="mixMatchRight">
         <MixMatchTopBar
+
 
           title="Mix & Match"
           subtitle={
@@ -332,6 +455,7 @@ export default function MixMatchPlayPage(props: {
           canSubmit={!allCorrect && canSubmit}
           onSubmit={onSubmit}
           onReset={resetAll}
+          teams={teams}
           teams={teams}
           selectedTeamId={activeTeamId}
           onSelectTeam={setActiveTeamId}
@@ -359,6 +483,7 @@ export default function MixMatchPlayPage(props: {
           onRemoveOption={onRemoveOption}
         />
 
+
         <AnimatePresence>
           {showResult && (
             <motion.div
@@ -368,6 +493,7 @@ export default function MixMatchPlayPage(props: {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
               onClick={() => setShowResult(false)}
+              onClick={() => setShowResult(false)}
             >
               <motion.div
                 className="mixMatchResultCard glow"
@@ -376,11 +502,15 @@ export default function MixMatchPlayPage(props: {
                 exit={{ y: 18, scale: 0.96, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 420, damping: 28 }}
                 onClick={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
               >
                 <button
                   type="button"
+                  type="button"
                   className="mixMatchResultClose"
                   onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     e.preventDefault();
                     e.stopPropagation();
                     setShowResult(false);
@@ -393,6 +523,11 @@ export default function MixMatchPlayPage(props: {
                 <div className="mixMatchResultLabel">Result</div>
                 <div className="mixMatchResultTime">{timer.formatted}</div>
                 <div className="mixMatchResultHint">Penalties included</div>
+
+                {/* ✅ show score derived from time */}
+                <div className="mixMatchResultHint" style={{ marginTop: 8 }}>
+                  Score: <b>{scorePreview}</b> (BASE {BASE_SECONDS}s)
+                </div>
 
                 {/* ✅ show score derived from time */}
                 <div className="mixMatchResultHint" style={{ marginTop: 8 }}>

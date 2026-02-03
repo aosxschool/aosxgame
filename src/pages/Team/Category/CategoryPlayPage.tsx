@@ -1,3 +1,4 @@
+
 import { useEffect, useState , useCallback, useRef} from "react";
 import { Navigate, useLocation, useParams } from "react-router-dom";
 import type { Team } from "../../../types";
@@ -13,6 +14,8 @@ import type { CategoryTile } from "./categoryTypes";
 import { useCategoryGame } from "./useCategoryGame";
 
 import EndPage from "../../EndPage"
+
+
 
 import { saveAllTeams } from '../../../data/leaderboard.api'
 import { toLeaderboardFields } from "../../../data/leaderBoardConverter";
