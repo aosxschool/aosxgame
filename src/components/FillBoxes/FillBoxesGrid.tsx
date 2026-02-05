@@ -14,7 +14,6 @@ export default function FillBoxesGrid(props: {
       style={{
         display: "grid",
         gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-        gap: 15,
       }}
     >
       {Array.from({ length: rows }).map((_, r) =>
