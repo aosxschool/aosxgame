@@ -17,6 +17,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,12 +34,15 @@ jobs:
       - name: Build
         run: npm run build
         env:
+          # ✅ keep your existing env keys
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_ADMIN_DOMAIN: ${{ secrets.VITE_ADMIN_DOMAIN }}
 
-      # If you have react-router non-hash routes, you'd also add a 404.html copy
-      # For HashRouter it's optional, but harmless:
+          # OPTIONAL (only if your app reads this):
+          # VITE_BASE: "/aosx-game/"
+
+      # ✅ Harmless for HashRouter; useful if you ever switch away from hash routing
       - name: SPA fallback (optional)
         run: |
           if [ -f dist/index.html ]; then cp dist/index.html dist/404.html; fi
