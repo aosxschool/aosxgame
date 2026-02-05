@@ -121,9 +121,9 @@ export const DEMO_FILLBOXES: FillBoxesPuzzle = {
 
     { r: 6, c: 1, value: "RABBIT01", locked: true },
     { r: 6, c: 2, value: "54", locked: true },
-    { r: 6, c: 3, value: "AH", locked: true },
+    { r: 6, c: 3, value: "NH", locked: true },
     { r: 6, c: 4, value: "ASW", locked: true },
-    { r: 6, c: 5, value: "AB", locked: true },
+    { r: 6, c: 5, value: "SCS", locked: true },
     { r: 6, c: 6, value: "2", locked: true },
     { r: 6, c: 7, value: "4204", locked: true },
     { r: 6, c: 8, value: "1000H", locked: true },
@@ -134,7 +134,7 @@ export const DEMO_FILLBOXES: FillBoxesPuzzle = {
     { r: 6, c: 13, value: "KONG W M", locked: true },
 
     { r: 7, c: 2, value: "78", locked: true },
-    { r: 7, c: 3, value: "VH", locked: true },
+    { r: 7, c: 3, value: "CH", locked: true },
     { r: 7, c: 5, value: "SBZ", locked: true },
     { r: 7, c: 7, value: "4206", locked: true },
     { r: 7, c: 8, value: "1030H", locked: true },

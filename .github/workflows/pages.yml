@@ -2,7 +2,8 @@ name: Deploy Vite to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,24 +18,39 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+
+      - name: Install
+        run: npm ci
+
       - name: Build
         run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_ADMIN_DOMAIN: ${{secrets.VITE_ADMIN_DOMAIN}}
+          VITE_ADMIN_DOMAIN: ${{ secrets.VITE_ADMIN_DOMAIN }}
 
-      - uses: actions/configure-pages@v5
+      # If you have react-router non-hash routes, you'd also add a 404.html copy
+      # For HashRouter it's optional, but harmless:
+      - name: SPA fallback (optional)
+        run: |
+          if [ -f dist/index.html ]; then cp dist/index.html dist/404.html; fi
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-      - uses: actions/deploy-pages@v4
- 
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

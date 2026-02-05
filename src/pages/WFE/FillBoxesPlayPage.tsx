@@ -6,12 +6,7 @@ import FillBoxesTopBar from "../../components/FillBoxes/FillBoxesTopBar";
 import FillBoxesGrid from "../../components/FillBoxes/FillBoxesGrid";
 import PassageOverlay from "../../components/FillBoxes/PassageOverlay";
 
-import {
-  buildFillBoxesInitial,
-  clearAllUserInputs,
-  evaluateFillBoxes,
-  retryWrongOnly,
-} from "../../utils/fillBoxes";
+import { buildFillBoxesInitial, clearAllUserInputs } from "../../utils/fillBoxes";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { burstConfetti } from "../../utils/Confetti";
@@ -28,40 +23,26 @@ export default function FillBoxesPlayPage(props: {
 
   const [showComplete, setShowComplete] = useState(false);
 
-  /* ===============================
-     REFS (important fixes)
-  =============================== */
   const confettiFiredRef = useRef(false);
-  const prevAllCorrectRef = useRef(false); // ⭐ prevents popup reopening
+  const prevAllCorrectRef = useRef(false);
 
-  /* ===============================
-     COMPUTED
-  =============================== */
+  // -------- helpers: normalize input + key --------
+  function norm(s: string) {
+    let x = s ?? "";
+    if (puzzle.trim) x = x.trim();
+    if (puzzle.caseInsensitive) x = x.toLowerCase();
+    return x;
+  }
 
-  const canSubmit = useMemo(() => {
-    for (const k of Object.keys(puzzle.answerKey)) {
-      if (!(state.values[k] ?? "").trim()) return false;
-    }
-    return true;
-  }, [state.values, puzzle.answerKey]);
-
+  // ✅ allCorrect when EVERY answerKey cell is correct
   const allCorrect = useMemo(() => {
-    if (!state.submitted) return false;
     for (const k of Object.keys(puzzle.answerKey)) {
       if (state.status[k] !== "correct") return false;
     }
-    return true;
-  }, [state.submitted, state.status, puzzle.answerKey]);
+    return Object.keys(puzzle.answerKey).length > 0;
+  }, [state.status, puzzle.answerKey]);
 
-  const hasWrong = useMemo(() => {
-    if (!state.submitted) return false;
-    return Object.values(state.status).includes("wrong");
-  }, [state.submitted, state.status]);
-
-  /* ===============================
-     ⭐ EDGE-TRIGGER COMPLETION
-     only fires once when becoming true
-  =============================== */
+  // ✅ stop timer + popup once on completion
   useEffect(() => {
     const prev = prevAllCorrectRef.current;
 
@@ -78,32 +59,33 @@ export default function FillBoxesPlayPage(props: {
     prevAllCorrectRef.current = allCorrect;
   }, [allCorrect, timer]);
 
-  /* ===============================
-     HANDLERS
-  =============================== */
-
   function onChangeCell(r: number, c: number, value: string) {
     timer.startIfNeeded();
 
     const k = `${r},${c}`;
     if (state.locked[k]) return;
 
-    setState((prev) => {
-      const nextStatus = { ...prev.status };
+    const correct = puzzle.answerKey[k];
+    const isAnswerCell = correct !== undefined;
 
-      if (prev.submitted) {
-        for (const kk of Object.keys(puzzle.answerKey)) {
-          if (nextStatus[kk] === "wrong") nextStatus[kk] = "neutral";
-        }
-      }
+    const upper = value.toUpperCase();
 
-      return {
-        ...prev,
-        submitted: false,
-        values: { ...prev.values, [k]: value },
-        status: nextStatus,
-      };
-    });
+    const nextStatus = { ...state.status };
+
+    if (isAnswerCell) {
+      nextStatus[k] = norm(value) === norm(correct) ? "correct" : "neutral";
+    } else {
+      // if you have non-answer editable cells, keep neutral
+      nextStatus[k] = "neutral";
+    }
+
+    setState((prev) => ({
+      ...prev,
+      values: { ...prev.values, [k]: upper },
+      status: nextStatus,
+      // submitted is irrelevant now; keep false so other code doesn't depend on it
+      submitted: false,
+    }));
   }
 
   function onClear() {
@@ -111,68 +93,42 @@ export default function FillBoxesPlayPage(props: {
 
     timer.reset();
 
-    /* ⭐ reset completion state */
     setShowComplete(false);
     confettiFiredRef.current = false;
     prevAllCorrectRef.current = false;
   }
 
-  function onRetryWrong() {
-    if (!hasWrong) return;
-    setState((prev) => retryWrongOnly(puzzle, prev));
-  }
-
-  function onSubmit() {
-    timer.startIfNeeded();
-
-    setState((prev) => {
-      const res = evaluateFillBoxes(puzzle, prev);
-      return {
-        ...prev,
-        status: res.nextStatus,
-        submitted: true,
-      };
-    });
-  }
-
   function onAutoFill() {
     timer.startIfNeeded();
 
-    setState((prev) => ({
-      ...prev,
-      submitted: false,
-      values: {
-        ...prev.values,
-        ...puzzle.answerKey,
-      },
-    }));
-  }
+    setState((prev) => {
+      const nextValues = { ...prev.values, ...puzzle.answerKey };
 
-  /* ===============================
-     UI
-  =============================== */
+      // after autofill, mark all answer cells correct
+      const nextStatus = { ...prev.status };
+      for (const k of Object.keys(puzzle.answerKey)) nextStatus[k] = "correct";
+
+      return {
+        ...prev,
+        values: nextValues,
+        status: nextStatus,
+        submitted: false,
+      };
+    });
+  }
 
   return (
     <div className="page" style={{ maxWidth: "95vw" }}>
       <FillBoxesTopBar
         title="Fill in the Boxes"
         timeLabel={timer.formatted}
-        canSubmit={canSubmit}
         onOpenPassage={() => setPassageOpen(true)}
         onClear={onClear}
-        onRetryWrong={onRetryWrong}
-        onSubmit={onSubmit}
         onAutoFill={onAutoFill}
-        submitted={state.submitted}
-        canRetryWrong={hasWrong}
       />
 
       <div style={{ marginTop: 14 }}>
-        <FillBoxesGrid
-          puzzle={puzzle}
-          state={state}
-          onChangeCell={onChangeCell}
-        />
+        <FillBoxesGrid puzzle={puzzle} state={state} onChangeCell={onChangeCell} />
       </div>
 
       <PassageOverlay
@@ -182,9 +138,6 @@ export default function FillBoxesPlayPage(props: {
         onClose={() => setPassageOpen(false)}
       />
 
-      {/* ===============================
-         COMPLETION POPUP
-      =============================== */}
       <AnimatePresence>
         {showComplete && (
           <motion.div

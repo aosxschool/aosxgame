@@ -2,15 +2,10 @@ export default function FillBoxesTopBar(props: {
   title: string;
   timeLabel: string;
 
-  canSubmit: boolean;
   onOpenPassage: () => void;
   onClear: () => void;
-  onRetryWrong: () => void;
-  onSubmit: () => void;
   onAutoFill: () => void; 
 
-  canRetryWrong: boolean;
-  submitted: boolean;
 }) {
   return (
     <div className="topbar">
@@ -32,14 +27,6 @@ export default function FillBoxesTopBar(props: {
 
         <button className="btn-pill" onClick={props.onClear}>
           CLEAR
-        </button>
-
-        <button className="btn" onClick={props.onRetryWrong} disabled={!props.canRetryWrong}>
-          RETRY WRONG
-        </button>
-
-        <button className="btn primary" onClick={props.onSubmit} disabled={!props.canSubmit}>
-          SUBMIT
         </button>
       </div>
     </div>

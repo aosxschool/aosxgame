@@ -15,7 +15,7 @@ import {
   isTeamGameId,
   type TeamMode,
   type TeamGameId,
-  type TopicId, 
+  type TopicId,
 } from "../data/appConfig";
 
 type GameOption = { code: string; label: string };
@@ -46,6 +46,11 @@ export default function LobbyPage(props: {
   const [openPickerIndex, setOpenPickerIndex] = useState<number | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
 
+  // ✅ stable team IDs so inputs don't remount on every keystroke
+  const teamIdsRef = useRef<string[]>(
+    Array.from({ length: 4 }).map(() => uid("team"))
+  );
+
   const allowedTopicIds = tg.allowedTopicsByMode[tm]; // TopicId[]
   const allowedSet = useMemo(() => new Set<TopicId>(allowedTopicIds), [allowedTopicIds]);
 
@@ -59,8 +64,6 @@ export default function LobbyPage(props: {
       const { data, error } = await supabase
         .from(tg.topicsSource.table)
         .select(tg.topicsSource.column);
-
-      
 
       if (cancelled) return;
 
@@ -103,7 +106,6 @@ export default function LobbyPage(props: {
       setTopicOptions(opts);
       setTopicCode((prev) => (prev && opts.some((o) => o.code === prev) ? prev : opts[0]?.code ?? ""));
       setLoading(false);
-      
     }
 
     loadTopics();
@@ -127,7 +129,7 @@ export default function LobbyPage(props: {
     return Array.from({ length: teamCount }).map((_, i) => {
       const fallbackMascot = MASCOTS[i % MASCOTS.length].id;
       return {
-        id: uid("team"),
+        id: teamIdsRef.current[i],
         name: names[i] ?? `Team ${i + 1}`,
         color: TEAM_COLORS[i % TEAM_COLORS.length],
         score: 0,
@@ -151,17 +153,17 @@ export default function LobbyPage(props: {
 
   const canStart = !loading && !err && !!topicCode && topicOptions.length > 0;
 
-
-  
   return (
-    <div className="page">
+    <div className="page" style={{maxWidth: "80vw"}}>
       <div className="hero">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 420, damping: 28 }}
         >
-          <div className="brand">{tm.toUpperCase()} • {tg.title}</div>
+          <div className="brand">
+            {tm.toUpperCase()} • {tg.title}
+          </div>
           <h1 className="title">
             <BouncyText text="Select Topic & Teams" />
           </h1>
@@ -169,14 +171,18 @@ export default function LobbyPage(props: {
       </div>
 
       <div className="grid2">
-        <GlowCard style={{padding: "40px"}}>
+        <GlowCard style={{ padding: "40px" }}>
           <div className="cardTitle">Topic</div>
 
           <div className="segmented">
             {loading ? (
-              <button className="segBtn" disabled>Loading…</button>
+              <button className="segBtn" disabled>
+                Loading…
+              </button>
             ) : topicOptions.length === 0 ? (
-              <button className="segBtn" disabled>No topics found</button>
+              <button className="segBtn" disabled>
+                No topics found
+              </button>
             ) : (
               topicOptions.map((opt) => (
                 <button
@@ -201,9 +207,13 @@ export default function LobbyPage(props: {
           <div className="cardTitle">Number of Teams</div>
           <div className="row">
             <div className="teamCounter">
-              <button className="teamBtn" onClick={() => setTeamCount((c) => clamp(c - 1, 1, 4))}>–</button>
+              <button className="teamBtn" onClick={() => setTeamCount((c) => clamp(c - 1, 1, 4))}>
+                –
+              </button>
               <div className="teamCount">{teamCount}</div>
-              <button className="teamBtn" onClick={() => setTeamCount((c) => clamp(c + 1, 1, 4))}>+</button>
+              <button className="teamBtn" onClick={() => setTeamCount((c) => clamp(c + 1, 1, 4))}>
+                +
+              </button>
             </div>
             <div className="hint">1 to 4 teams</div>
           </div>
@@ -219,7 +229,7 @@ export default function LobbyPage(props: {
           </button>
         </GlowCard>
 
-        <GlowCard style={{padding: "40px"}}>
+        <GlowCard style={{ padding: "40px" }}>
           <div className="cardTitle">Teams</div>
 
           <div className="teamList">
@@ -228,7 +238,7 @@ export default function LobbyPage(props: {
               const open = openPickerIndex === i;
 
               return (
-                <div key={`${t.id}-${i}`} className="teamRow">
+                <div key={t.id} className="teamRow">
                   <div className="teamSwatch" style={{ background: t.color }} />
 
                   <div className="teamInputWrap" ref={open ? pickerRef : null}>
@@ -291,9 +301,6 @@ export default function LobbyPage(props: {
           </div>
         </GlowCard>
       </div>
-      
     </div>
-
-    
   );
 }
