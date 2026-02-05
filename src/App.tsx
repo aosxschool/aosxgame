@@ -234,7 +234,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter basename="/aosx-game">
+    <BrowserRouter basename="/aosxgame">
       <AppRoutes />
     </BrowserRouter>
   );
