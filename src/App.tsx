@@ -167,7 +167,7 @@ function AppRoutes() {
               path="/home"
               element={
                 <RequireAuth>
-                  <HomePage navigate={navigate} />
+                  <HomePage />
                 </RequireAuth>
               }
             />

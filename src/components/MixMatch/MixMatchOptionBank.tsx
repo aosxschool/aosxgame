@@ -19,7 +19,7 @@ export default function MixMatchOptionBank(props: {
   }, [props.options, props.placedOptionIds]);
 
   return (
-    <div className="options-panel" style={{width: "25%"}}>
+    <div className="options-panel" style={{width: "25vw"}}>
       <div className="options-title">Options ({leftCount} left)</div>
 
       <div className="options-list">

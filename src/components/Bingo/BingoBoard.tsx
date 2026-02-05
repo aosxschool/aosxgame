@@ -7,7 +7,6 @@ export default function BingoBoard(props: {
   onTileDropTeam: (idx: number, teamId: string) => void
 }) {
   return (
-    <div className="boardWrap">
       <div className="board">
         {props.tiles.map((tile, idx) => (
           <TileCard
@@ -19,6 +18,5 @@ export default function BingoBoard(props: {
           />
         ))}
       </div>
-    </div>
   )
 }

@@ -95,9 +95,9 @@ export type MixMatchTile = {
 
 export type MixMatchPuzzle = {
   id: string;
-  size: 5; // fixed for now
-  tiles: MixMatchTile[]; // length 25
-  options: MixMatchOption[]; // includes all required options (can include decoys too if you want)
+  size: 5; 
+  tiles: MixMatchTile[]; 
+  options: MixMatchOption[];
 };
 
 export type PlacementMap = Record<string, string[]>; // tileId -> optionIds
@@ -111,9 +111,38 @@ export type MixMatchEval = {
     { correctCount: number; wrongCount: number; requiredCount: number }
   >;
 
-  // ✅ add these
   correctOptionIds: string[];
   wrongOptionIds: string[];
 };
 
 
+// Fill in Boxes Game
+export type CellStatus = "neutral" | "correct" | "wrong";
+
+export type FillCell = {
+  r: number;          // 0..10
+  c: number;          // 0..13
+  value: string;      // what is displayed (prefill or user input)
+  locked?: boolean;   // prefilled/locked (not editable)
+};
+
+export type FillAnswerKey = Record<string, string>; 
+// key: "r,c" -> correct value (string)
+
+export type FillBoxesPuzzle = {
+  id: string;
+  rows: number;  // 11
+  cols: number;  // 14
+  passageTitle: string;
+  passageText: string;
+
+  // cells that start with values (locked ones + maybe hints)
+  presetCells: FillCell[];
+
+  // the correct answers for only the “fillable” cells
+  answerKey: FillAnswerKey;
+
+  // optional: normalization rules
+  caseInsensitive?: boolean;
+  trim?: boolean;
+};

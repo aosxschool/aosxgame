@@ -5,7 +5,7 @@
    ========================= */
 
 export type TeamMode = "aos" | "aosx";
-export type SingleMode = "aosx" | "wfe"; // aosx has single-player too, wfe is single-player
+export type SingleMode = "aosx" | "wfe" | "fillblank"; // aosx has single-player too, wfe is single-player
 
 export type AppMode = TeamMode | "wfe"; // "aos" | "aosx" | "wfe"
 
@@ -106,7 +106,7 @@ export function tgPlayPath(mode: TeamMode, gameId: TeamGameId) {
    SINGLE-PLAYER GAMES
    ========================= */
 
-export type SinglePlayerGameId = "beaconpoints" | "crossword";
+export type SinglePlayerGameId = "beaconpoints" | "crossword" | "fillblank";
 
 export type SinglePlayerGameMeta = {
   id: SinglePlayerGameId;
@@ -148,6 +148,23 @@ export const singlePlayerGames: Record<SinglePlayerGameId, SinglePlayerGameMeta>
       "Fill all blanks before you can submit.",
     ],
     tip: "Tip: Click a square to focus it. Clicking the same square toggles direction.",
+    startLabel: "Begin",
+  },
+
+  fillblank: {
+    id: "fillblank",
+    mode: "wfe",
+    title: "Fill in the Blanks",
+    subtitle: "Instructions",
+    bullets: [
+      "Fill the blanks by typing keywords into highlighted squares.",
+      "Black squares are blocked and cannot be typed into.",
+      "Keywords can be found in the passage provided",
+      "Fill in all blanks before submitting",
+      "After submitting, click on retry wrong to edit wrong answers.",
+      "May the fastest traineee win!",
+    ],
+    tip: "Tip: Fill in all blanks before submitting.",
     startLabel: "Begin",
   },
 };
@@ -230,6 +247,7 @@ export const APP_NAV: NavItem[] = [
     items: [
       { label: "WFE 1", to: spStartPath("wfe", "crossword") },
       { label: "WFE 2", to: tgLobbyPath("aosx", "mixmatch") },
+      { label: "WFE 3", to: spStartPath("wfe", "fillblank") },
     ],
   },
 ];

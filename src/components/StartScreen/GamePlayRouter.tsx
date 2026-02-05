@@ -1,4 +1,4 @@
-import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 
 import {
   isSingleMode,
@@ -17,6 +17,7 @@ import MixMatchPlayPage from "../../pages/MixMatch/MixMatchPlayPage";
 // team-game pages
 import BingoPlayPage from "../../pages/Team/BingoPlayPage";
 import CategoryPlayPage from "../../pages/Team/Category/CategoryPlayPage";
+import FillBoxesPlayPage from "../../pages/WFE/FillBoxesPlayPage";
 
 export default function GamePlayRouter(props: { navigate: (to: string) => void }) {
   const { mode, gameId } = useParams<{ mode: string; gameId: string }>();
@@ -58,6 +59,8 @@ export default function GamePlayRouter(props: { navigate: (to: string) => void }
         return <CrosswordPage navigate={props.navigate} gameId="crossword" />;
       case "beaconpoints":
         return <BeaconPointsPage navigate={props.navigate} gameId="beaconpoints" />;
+      case "fillblank":
+        return <FillBoxesPlayPage navigate={props.navigate} gameId="fillblank" />;
       default:
 
         return <Navigate to="/home" replace />;

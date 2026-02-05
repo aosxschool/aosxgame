@@ -47,7 +47,7 @@ body{
 
 .page{
   padding: 28px 18px 38px;
-  max-width: 1180px;
+  max-width: 60vw;
   margin: 0 auto;
 }
 
@@ -531,24 +531,18 @@ body{
   font-weight: 950;
 }
 
-.boardWrap{
-  margin-top: 10px;
-  display:flex;
-  justify-content:center;
-}
+
 .board{
   display:grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
+  gap: 1vw;
 }
 @media (max-width: 560px){
   .board{ gap: 10px; }
 }
 .tile{
   position:relative;
-  height: clamp(112px, 14vw, 160px);
-  width: clamp(180px, 23vw, 275px);
-  padding: 14px;
+  padding: 4.5vh 5%;
   border-radius: 22px;
   border: 1px solid rgba(255,255,255,0.16);
   background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05));
@@ -576,15 +570,15 @@ body{
 .tilePoints{
   font-weight: 900;
   opacity: 0.6;
-  font-size: clamp(12px, 1.2vw, 44px);
+  font-size: 1vw;
   position: absolute;
-  top:20px;
+  top:12px;
   letter-spacing: 2px;
 }
 
 .tileCategory{
   font-weight: 900;
-  font-size: clamp(12px, 1.1vw, 44px);
+  font-size: 0.7vw;
   text-align: center;
 }
 
@@ -1434,9 +1428,9 @@ body{
 }
 
 .btn-pill {
-  padding: 8px 20px;
+  padding: 10px 14px;
   border-radius: 10px;
-  border: 2px solid white;
+  border: 1px solid rgba(255, 255, 255, 0.295);
   font-size: 12px;
   cursor: pointer;
   transition: background 120ms ease, transform 120ms ease;
@@ -1988,8 +1982,6 @@ body{
   background: rgba(0,0,0,0.18);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
   overflow: hidden;
-  height: 65px;
-  width: 65px
 }
 
 .cwBlock{
@@ -2035,7 +2027,7 @@ body{
   padding: 2.5% 3%;
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
-  width: fit-content
+  width: 45%;
 }
 
 .cwQuestionsContainer{
@@ -2581,4 +2573,91 @@ body{
 
 .btn.clear:hover{
   background-color: rgb(255, 77, 77);
+}
+
+
+.timerPill{
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-weight: 800;
+}
+
+.fillCell{
+  width: 100%;
+  height: 3vw;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.295);
+  background: rgba(255, 255, 255, 0.116);
+  color: rgb(255, 255, 255);
+  font-weight: 800;
+  text-align: center;
+  outline: none;
+  margin-bottom: 5px;
+  font-size: 75%;
+}
+
+.fillCell:disabled{
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.fillCellCorrect{
+  border-color: rgba(80, 255, 140, 0.65);
+  background: rgba(80, 255, 140, 0.16);
+}
+
+.fillCellWrong{
+  border-color: rgba(255, 80, 80, 0.65);
+  background: rgba(255, 80, 80, 0.16);
+}
+
+.fillCellFirst {
+  font-weight: 800;
+  background-color: rgb(255, 255, 255);
+  color:#020617
+}
+
+/* ===== Overlay background ===== */
+.fillCompleteOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* ===== Card ===== */
+.fillCompleteCard {
+  background: #161a22;
+  padding: 40px 48px;
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  border: 2px solid rgba(255,255,255,0.08);
+  min-width: 320px;
+}
+
+/* Title */
+.fillCompleteTitle {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+/* Big time */
+.fillCompleteTime {
+  font-size: 42px;
+  font-weight: 800;
+  color: #4ade80; /* green */
+}
+
+/* small label */
+.fillCompleteHint {
+  opacity: 0.7;
+  margin-top: 6px;
 }
