@@ -42,11 +42,9 @@ jobs:
           # OPTIONAL (only if your app reads this):
           # VITE_BASE: "/aosx-game/"
 
-      # ✅ Harmless for HashRouter; useful if you ever switch away from hash routing
-      - name: SPA fallback (optional)
-        run: |
-          if [ -f dist/index.html ]; then cp dist/index.html dist/404.html; fi
-
+      - name: SPA fallback 
+        run: cp dist/index.html dist/404.html
+        
       - name: Configure Pages
         uses: actions/configure-pages@v5
 

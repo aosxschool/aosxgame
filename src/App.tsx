@@ -1,13 +1,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
-  HashRouter,
   Routes,
   Route,
   Navigate,
   useLocation,
   useNavigate,
   useParams,
+  BrowserRouter,
 } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
@@ -234,8 +234,8 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <HashRouter >
+    <BrowserRouter basename="/aosx-game">
       <AppRoutes />
-    </HashRouter>
+    </BrowserRouter>
   );
 }
