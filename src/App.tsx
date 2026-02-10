@@ -202,24 +202,6 @@ function AppRoutes() {
               }
             />
 
-            {/* Blank placeholders referenced by nav */}
-            <Route
-              path="/aosx/blank"
-              element={
-                <RequireAuth>
-                  <BlankPage title="AOSX — Blank" />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/wfe/wfe2"
-              element={
-                <RequireAuth>
-                  <BlankPage title="WFE 2" />
-                </RequireAuth>
-              }
-            />
-
             {/* Unknown route */}
             <Route
               path="*"

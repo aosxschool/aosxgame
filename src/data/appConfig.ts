@@ -4,10 +4,10 @@
    MODES (router param)
    ========================= */
 
-export type TeamMode = "aos" | "aosx";
-export type SingleMode = "aosx" | "wfe" | "fillblank"; // aosx has single-player too, wfe is single-player
+export type TeamMode = "aos" | "aosx" | "summary";
+export type SingleMode = "aosx" | "summary" | "fillblank"; 
 
-export type AppMode = TeamMode | "wfe"; // "aos" | "aosx" | "wfe"
+export type AppMode = TeamMode
 
 /* =========================
    TOPICS (Supabase questions.game_code)
@@ -20,7 +20,7 @@ export type AppMode = TeamMode | "wfe"; // "aos" | "aosx" | "wfe"
  * - "mod_2a" -> "mod2a"
  * - "mod2a"  -> "mod2a"
  */
-export type TopicId = "avm" | "bvm" | "mod2a" | "mod2b" | "mod1" ;
+export type TopicId = "avm" | "bvm" | "mod2a1" | "mod2b" | "mod1" | "mod2a2";
 
 export function normTopic(code: string) {
   return code
@@ -33,16 +33,17 @@ export function normTopic(code: string) {
 export const TOPIC_LABELS: Record<TopicId, string> = {
   avm: "AVM",
   bvm: "BVM",
-  mod2a: "MOD 2A",
+  mod2a1: "MOD 2A",
   mod2b: "MOD 2B",
   mod1: "MOD 1",
+  mod2a2: "BEACON POINTS"
 };
 
 /* =========================
    TEAM GAMES
    ========================= */
 
-export type TeamGameId = "bingo" | "category" | "mixmatch";
+export type TeamGameId = "bingo" | "category" | "mixmatch" | "beaconpoints";
 
 export type TeamGameMeta = {
   id: TeamGameId;
@@ -50,13 +51,11 @@ export type TeamGameMeta = {
 
   topicsSource: { table: string; column: string };
 
-  /**
-   * ✅ REQUIRED:
-   * Allowed topic list depends on BOTH mode and team-game.
-   */
   allowedTopicsByMode: Record<TeamMode, TopicId[]>;
 
   startLabel?: string;
+
+  maxTeams?: number;
 };
 
 export const teamGames: Record<TeamGameId, TeamGameMeta> = {
@@ -66,7 +65,8 @@ export const teamGames: Record<TeamGameId, TeamGameMeta> = {
     topicsSource: { table: "bingo_questions", column: "game_code" },
     allowedTopicsByMode: {
       aos: ["avm"],
-      aosx: ["mod2a"],
+      aosx: ["mod2a1"],
+      summary: []
     },
     startLabel: "Start",
   },
@@ -78,6 +78,7 @@ export const teamGames: Record<TeamGameId, TeamGameMeta> = {
     allowedTopicsByMode: {
       aos: ["bvm"],
       aosx: ["mod1"],
+      summary: []
     },
     startLabel: "Start",
   },
@@ -89,8 +90,23 @@ export const teamGames: Record<TeamGameId, TeamGameMeta> = {
     allowedTopicsByMode: {
       aos: [],
       aosx: ["mod2b"],
+      summary: ["mod2b"]
     },
     startLabel: "Start",
+    maxTeams: 1
+  },
+
+  beaconpoints: {
+    id: "beaconpoints",
+    title: "Beacon Points",
+    topicsSource: { table: "beaconpoints", column: "game_code" },
+    allowedTopicsByMode: {
+      aos: [],
+      aosx: ["mod2a2"],
+      summary: []
+    },
+    startLabel: "Start",
+    maxTeams: 1
   },
 };
 
@@ -106,11 +122,11 @@ export function tgPlayPath(mode: TeamMode, gameId: TeamGameId) {
    SINGLE-PLAYER GAMES
    ========================= */
 
-export type SinglePlayerGameId = "beaconpoints" | "crossword" | "fillblank";
+export type SinglePlayerGameId = "crossword" | "fillblank";
 
 export type SinglePlayerGameMeta = {
   id: SinglePlayerGameId;
-  mode: SingleMode; // "aosx" or "wfe"
+  mode: SingleMode; // "aosx" or "summary"
 
   title: string;
   subtitle?: string;
@@ -120,23 +136,9 @@ export type SinglePlayerGameMeta = {
 };
 
 export const singlePlayerGames: Record<SinglePlayerGameId, SinglePlayerGameMeta> = {
-  beaconpoints: {
-    id: "beaconpoints",
-    mode: "aosx",
-    title: "Beacon Points",
-    subtitle: "Instructions",
-    bullets: [
-      "Drag and drop the repective locations into their respective blanks",
-      "Replace tiles when necessary",
-      "Submit only when all required inputs are filled.",
-    ],
-    tip: "Tip: Take your time to review before submitting.",
-    startLabel: "Begin",
-  },
-
   crossword: {
     id: "crossword",
-    mode: "wfe",
+    mode: "summary",
     title: "Crossword",
     subtitle: "Instructions",
     bullets: [
@@ -153,7 +155,7 @@ export const singlePlayerGames: Record<SinglePlayerGameId, SinglePlayerGameMeta>
 
   fillblank: {
     id: "fillblank",
-    mode: "wfe",
+    mode: "summary",
     title: "Fill in the Blanks",
     subtitle: "Instructions",
     bullets: [
@@ -181,10 +183,10 @@ export function spPlayPath(mode: SingleMode, gameId: SinglePlayerGameId) {
    ========================= */
 
 export function isTeamMode(m: any): m is TeamMode {
-  return m === "aos" || m === "aosx";
+  return m === "aos" || m === "aosx" || m === "summary";
 }
 export function isSingleMode(m: any): m is SingleMode {
-  return m === "aosx" || m === "wfe";
+  return m === "aosx" || m === "summary";
 }
 export function isSinglePlayerGameId(x: string): x is SinglePlayerGameId {
   return Object.prototype.hasOwnProperty.call(singlePlayerGames, x);
@@ -210,9 +212,10 @@ AOSX:
 - AOSX Mod 2A.2 (Beacon Points)
 - AOSX Mod 2B (Physical Bingo Board)
 
-WFE:
-- WFE 1
-- WFE 2*/
+summary:
+- ACVITIY 1
+- ACVITIY 2
+- ACVITIY 3*/
 
 export type NavItem =
   | { type: "link"; label: string; to: string }
@@ -225,8 +228,8 @@ export const APP_NAV: NavItem[] = [
     type: "group",
     label: "AOS",
     items: [
-      { label: "AVM", to: tgLobbyPath("aos", "bingo") },
       { label: "BVM", to: tgLobbyPath("aos", "category") },
+      { label: "AVM", to: tgLobbyPath("aos", "bingo") },
     ],
   },
 
@@ -236,18 +239,18 @@ export const APP_NAV: NavItem[] = [
     items: [
       { label: "Mod 1", to: tgLobbyPath("aosx", "category") },
       { label: "Mod 2A.1", to: tgLobbyPath("aosx", "bingo") },
-      { label: "Mod 2A.2", to: spStartPath("aosx", "beaconpoints") },
-      
+      { label: "Mod 2A.2", to: tgLobbyPath("aosx", "beaconpoints") },
+      { label: "Mod 2B", to: tgLobbyPath("aosx", "mixmatch") },
     ],
   },
 
   {
     type: "group",
-    label: "WFE",
+    label: "Summary",
     items: [
-      { label: "WFE 1", to: spStartPath("wfe", "crossword") },
-      { label: "WFE 2", to: tgLobbyPath("aosx", "mixmatch") },
-      { label: "WFE 3", to: spStartPath("wfe", "fillblank") },
+      { label: "Activity 1", to: spStartPath("summary", "crossword") },
+      { label: "Activity 2", to: tgLobbyPath("summary", "mixmatch") },
+      { label: "Activity 3", to: spStartPath("summary", "fillblank") },
     ],
   },
 ];

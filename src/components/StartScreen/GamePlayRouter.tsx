@@ -44,6 +44,8 @@ export default function GamePlayRouter(props: { navigate: (to: string) => void }
         );
       case "category":
         return <CategoryPlayPage navigate={props.navigate} gameId="category"/>;
+      case "beaconpoints":
+        return <BeaconPointsPage navigate={props.navigate} gameId="beaconpoints" />;
       case "mixmatch":
         return <MixMatchPlayPage navigate={props.navigate} gameId="mixmatch" />;
       default:
@@ -51,14 +53,12 @@ export default function GamePlayRouter(props: { navigate: (to: string) => void }
     }
   }
 
-  // SINGLE games: /aosx|wfe/:gameId/play
+  // SINGLE games: /aosx|summary/:gameId/play
   if (isSingleMode(mode) && isSinglePlayerGameId(gameId)) {
     const g = gameId as SinglePlayerGameId;
     switch (g) {
       case "crossword":
         return <CrosswordPage navigate={props.navigate} gameId="crossword" />;
-      case "beaconpoints":
-        return <BeaconPointsPage navigate={props.navigate} gameId="beaconpoints" />;
       case "fillblank":
         return <FillBoxesPlayPage navigate={props.navigate} gameId="fillblank" />;
       default:

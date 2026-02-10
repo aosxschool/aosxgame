@@ -542,7 +542,7 @@ body{
 }
 .tile{
   position:relative;
-  padding: 4.5vh 5%;
+  padding: 5.8vh 10%;
   border-radius: 22px;
   border: 1px solid rgba(255,255,255,0.16);
   background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05));
@@ -578,7 +578,7 @@ body{
 
 .tileCategory{
   font-weight: 900;
-  font-size: 0.7vw;
+  font-size: 1vw;
   text-align: center;
 }
 

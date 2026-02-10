@@ -2,15 +2,15 @@
 import { supabase } from "../lib/supabase";
 
 export type Course = "aos" | "aosx";
-export type Topic = "avm" | "bvm" | "mod_1" | "mod_2a" | "mod_2b";
+export type Topic = "bvm" | "mod_1" | "mod_2a_1" | "mod_2a_2" | "mod_2b";
 
 export type LeaderboardRow = {
   course: Course;
   team_name: string;
-  avm: number;
   bvm: number;
   mod_1: number;
-  mod_2a: number;
+  mod_2a_1: number;
+  mod_2a_2: number;
   mod_2b: number;
   total_score: number;
 };
@@ -26,21 +26,24 @@ type ScorePayload = {
    INTERNAL HELPERS
    ===================================================== */
 
-function computeTotal(course: Course, base: Omit<LeaderboardRow, "course" | "team_name" | "total_score">) {
+function computeTotal(
+  course: Course,
+  base: Omit<LeaderboardRow, "course" | "team_name" | "total_score">
+) {
   if (course === "aos") {
-    // only AVM + BVM count
-    return base.avm + base.bvm
+    // AOS 
+    return base.bvm;
   }
-  // aosx: only mod_1 + mod_2a + mod_2b count
-  return base.mod_1 + base.mod_2a + base.mod_2b
+  // AOSX 
+  return base.mod_1 + base.mod_2a_1 + base.mod_2a_2 + base.mod_2b;
 }
 
 function blankBase() {
   return {
-    avm: 0,
     bvm: 0,
     mod_1: 0,
-    mod_2a: 0,
+    mod_2a_1: 0,
+    mod_2a_2: 0,
     mod_2b: 0,
   };
 }
@@ -51,16 +54,12 @@ function blankBase() {
    - Preserves all other topic scores already saved.
    ===================================================== */
 
-export async function saveTeamScore({
-  course,
-  teamName,
-  topic,
-  score,
-}: ScorePayload) {
+export async function saveTeamScore({ course, teamName, topic, score }: ScorePayload) {
+
   // 1) Read existing row (if any)
   const { data: existing, error: readErr } = await supabase
     .from("leaderboard")
-    .select("course, team_name, avm, bvm, mod_1, mod_2a, mod_2b, total_score")
+    .select("course, team_name, bvm, mod_1, mod_2a_1, mod_2a_2, mod_2b, total_score")
     .eq("course", course)
     .eq("team_name", teamName)
     .maybeSingle();
@@ -70,10 +69,10 @@ export async function saveTeamScore({
   // 2) Build base using existing values (or blank)
   const base = existing
     ? {
-        avm: existing.avm ?? 0,
         bvm: existing.bvm ?? 0,
         mod_1: existing.mod_1 ?? 0,
-        mod_2a: existing.mod_2a ?? 0,
+        mod_2a_1: existing.mod_2a_1 ?? 0,
+        mod_2a_2: existing.mod_2a_2 ?? 0,
         mod_2b: existing.mod_2b ?? 0,
       }
     : blankBase();
@@ -81,7 +80,17 @@ export async function saveTeamScore({
   // 3) Patch ONLY the topic column that belongs to this game/topic
   base[topic] = score;
 
-  // 4) Compute total_score (weighted by course)
+  // enforce "course rules": zero out topics not belonging to that course
+  if (course === "aos") {
+    base.mod_1 = 0;
+    base.mod_2a_1 = 0;
+    base.mod_2a_2 = 0;
+    base.mod_2b = 0;
+  } else {
+    base.bvm = 0;
+  }
+
+  // 4) Compute total_score
   const total_score = computeTotal(course, base);
 
   // 5) Update existing row or insert new row
@@ -110,8 +119,6 @@ export async function saveTeamScore({
 
 /* =====================================================
    SAVE / UPDATE MANY TEAMS (CALL AFTER GAME ENDS)
-   - Calls saveTeamScore for each team.
-   - Preserves other columns.
    ===================================================== */
 
 export async function saveAllTeams(
@@ -119,7 +126,6 @@ export async function saveAllTeams(
   topic: Topic,
   teams: { name: string; score: number }[]
 ) {
-  // sequential is simplest and safe (few teams)
   for (const t of teams) {
     await saveTeamScore({
       course,
@@ -137,7 +143,7 @@ export async function saveAllTeams(
 export async function loadLeaderboard(course: Course): Promise<LeaderboardRow[]> {
   const { data, error } = await supabase
     .from("leaderboard")
-    .select("course, team_name, avm, bvm, mod_1, mod_2a, mod_2b, total_score")
+    .select("course, team_name, bvm, mod_1, mod_2a_1, mod_2a_2, mod_2b, total_score")
     .eq("course", course)
     .order("total_score", { ascending: false });
 

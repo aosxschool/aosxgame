@@ -114,6 +114,10 @@ export default function LobbyPage(props: {
     };
   }, [tm, tg, allowedSet]);
 
+  useEffect(() => {
+    if (tg.maxTeams === 1) setTeamCount(1);
+  }, [tg.maxTeams]);
+
   // close mascot picker when clicking outside
   useEffect(() => {
     if (openPickerIndex === null) return;
@@ -204,21 +208,20 @@ export default function LobbyPage(props: {
 
           <div className="spacer" />
 
-          <div className="cardTitle">Number of Teams</div>
-          <div className="row">
-            <div className="teamCounter">
-              <button className="teamBtn" onClick={() => setTeamCount((c) => clamp(c - 1, 1, 4))}>
-                –
-              </button>
-              <div className="teamCount">{teamCount}</div>
-              <button className="teamBtn" onClick={() => setTeamCount((c) => clamp(c + 1, 1, 4))}>
-                +
-              </button>
-            </div>
-            <div className="hint">1 to 4 teams</div>
-          </div>
-
-          <div className="spacer" />
+          {tg.maxTeams !== 1 && (
+            <>
+              <div className="cardTitle">Number of Teams</div>
+              <div className="row">
+                <div className="teamCounter">
+                  <button className="teamBtn" onClick={() => setTeamCount((c) => clamp(c - 1, 1, 4))}>–</button>
+                  <div className="teamCount">{teamCount}</div>
+                  <button className="teamBtn" onClick={() => setTeamCount((c) => clamp(c + 1, 1, 4))}>+</button>
+                </div>
+                <div className="hint">1 to 4 teams</div>
+              </div>
+              <div className="spacer" />
+            </>
+          )}
 
           <button
             className="btn primary big"

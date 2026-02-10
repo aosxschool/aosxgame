@@ -1,4 +1,3 @@
-// src/pages/Team/MixMatch/MixMatchPlayPage.tsx
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Navigate, useLocation, useParams } from "react-router-dom";
 import type { Team, MixMatchPuzzle } from "../../types";
@@ -23,21 +22,17 @@ type LocationState = {
   topicCode: string;
 };
 
-const BASE_SECONDS = 600; // ✅ baseline: 10 minutes
+const BASE_SECONDS = 600;
 
 function timeToScore(timeSeconds: number) {
   return Math.max(0, BASE_SECONDS - timeSeconds);
 }
 
-export default function MixMatchPlayPage(props: {
-  navigate: (to: string) => void;
-  gameId: "mixmatch";
-}) {
+export default function MixMatchPlayPage(props: { navigate: (to: string) => void; gameId: "mixmatch" }) {
   const loc = useLocation();
   const navState = loc.state as LocationState | null;
   const { mode } = useParams<{ mode: "aos" | "aosx" }>();
 
-  // ✅ hooks must run regardless of navState
   const [activeTeamId, setActiveTeamId] = useState<string>(() => navState?.teams?.[0]?.id ?? "");
   const [puzzle, setPuzzle] = useState<MixMatchPuzzle | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,10 +45,8 @@ export default function MixMatchPlayPage(props: {
   const [optionStatus, setOptionStatus] = useState<Record<string, OptionMark>>({});
   const [showResult, setShowResult] = useState(false);
 
-  // ✅ prevent double save
   const savedRef = useRef(false);
 
-  // ✅ after hooks, do redirect
   if (!navState?.teams?.length || !navState.topicCode) {
     return <Navigate to="/home" replace />;
   }
@@ -61,12 +54,10 @@ export default function MixMatchPlayPage(props: {
   const { teams, topicCode } = navState;
   const team = teams[0];
 
-  // keep activeTeamId in sync when coming from lobby
   useEffect(() => {
     setActiveTeamId(teams[0]?.id ?? "");
   }, [teams]);
 
-  // Load puzzle
   useEffect(() => {
     let cancelled = false;
 
@@ -126,6 +117,8 @@ export default function MixMatchPlayPage(props: {
     if (!allCorrect) return;
     if (!mode) return;
     if (savedRef.current) return;
+
+    if (mode !== "aosx") return; 
 
     savedRef.current = true;
 
@@ -236,26 +229,6 @@ export default function MixMatchPlayPage(props: {
     savedRef.current = false;
   }
 
-  function autoFillAllCorrect() {
-  if (!puzzle) return;
-
-  // start timer so submit works the same way
-  timer.startIfNeeded();
-
-  const placements: Record<string, string[]> = {};
-  for (const t of puzzle.tiles) {
-    placements[t.id] = [t.requiredOptionIds[0]];
-  }
-
-  setState({ placements });
-
-  keepGreenClearRed();
-
-  setSubmitted(false);
-  setOptionStatus({});
-}
-
-
   function onSubmit() {
     if (!puzzle || !state) return;
     timer.startIfNeeded();
@@ -298,6 +271,9 @@ export default function MixMatchPlayPage(props: {
     );
   }
 
+  function autoFillAllCorrect() { if (!puzzle) return; // start timer so submit works the same way
+   timer.startIfNeeded(); const placements: Record<string, string[]> = {}; for (const t of puzzle.tiles) { placements[t.id] = [t.requiredOptionIds[0]]; } setState({ placements }); keepGreenClearRed(); setSubmitted(false); setOptionStatus({}); }
+
   const timeSeconds = Math.floor((timer.elapsedMs ?? 0) / 1000);
   const scorePreview = timeToScore(timeSeconds);
 
@@ -329,16 +305,7 @@ export default function MixMatchPlayPage(props: {
           onSelectTeam={setActiveTeamId}
         />
 
-        {/* <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={autoFillAllCorrect}
-            title="Test helper: fills every tile with the correct answer"
-          >
-            Auto Fill (Test)
-          </button>
-        </div>   */}
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}> <button type="button" className="btn ghost" onClick={autoFillAllCorrect} title="Test helper: fills every tile with the correct answer" > Auto Fill (Test) </button> </div> 
 
         <MixMatchBoard
           puzzle={puzzle}
@@ -386,7 +353,6 @@ export default function MixMatchPlayPage(props: {
                 <div className="mixMatchResultTime">{timer.formatted}</div>
                 <div className="mixMatchResultHint">Penalties included</div>
 
-                {/* ✅ show score derived from time */}
                 <div className="mixMatchResultHint" style={{ marginTop: 8 }}>
                   Score: <b>{scorePreview}</b> (BASE {BASE_SECONDS}s)
                 </div>

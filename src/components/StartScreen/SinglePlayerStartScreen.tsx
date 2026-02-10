@@ -20,7 +20,7 @@ export default function SinglePlayerStartPage(props: { navigate: (to: string) =>
     return <Navigate to="/home" replace />;
   }
 
-  // optional: enforce correct mode for the game (prevents /wfe/beaconpoints/start)
+  // optional: enforce correct mode for the game (prevents /summary/beaconpoints/start)
   if (game.mode !== m) {
     return <Navigate to={`/${game.mode}/${game.id}/start`} replace />;
   }

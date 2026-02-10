@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useCallback, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, Navigate } from "react-router-dom";
 
 import BingoBoard from "../../components/Bingo/BingoBoard";
 import QuestionModal from "../../components/Bingo/QuestionModal";
@@ -30,7 +30,6 @@ function shuffle<T>(arr: T[]): T[] {
 async function buildBoardFromDB(game: string): Promise<Tile[]> {
   const qs = await loadQuestions(game);
   if (qs.length !== 16) throw new Error("This game does not have exactly 16 questions");
-
   const shuffled = shuffle(qs);
   return shuffled.map((q, idx) => ({ id: `tile-${idx}`, question: q }));
 }
@@ -65,8 +64,8 @@ type LobbyState = {
 };
 
 export default function BingoPlayPage(props: {
-  game: string;
   teams: Team[];
+  game: string;
   navigate: (to: string) => void;
   gameId: "bingo";
 }) {
@@ -74,12 +73,18 @@ export default function BingoPlayPage(props: {
   const loc = useLocation();
   const nav = loc.state as LobbyState | null;
 
-  const [teams, setTeams] = useState<Team[]>(props.teams);
+  // ✅ if someone opens play page directly, redirect
+  if (!nav?.teams?.length || !nav.topicCode || !mode) {
+    return <Navigate to="/home" replace />;
+  }
+
+  // ✅ use teams from lobby (single source of truth)
+  const [teams, setTeams] = useState<Team[]>(nav.teams);
   const [finalTeams, setFinalTeams] = useState<Team[]>([]);
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedTeamId, setSelectedTeamId] = useState<string>(props.teams[0]?.id ?? "");
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(nav.teams[0]?.id ?? "");
   const selectedTeam = useMemo(
     () => teams.find((t) => t.id === selectedTeamId) ?? null,
     [teams, selectedTeamId]
@@ -98,10 +103,20 @@ export default function BingoPlayPage(props: {
 
   // load tiles
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
+
     buildBoardFromDB(props.game)
-      .then(setTiles)
-      .finally(() => setLoading(false));
+      .then((t) => {
+        if (!cancelled) setTiles(t);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [props.game]);
 
   const startQuestionFlow = (idx: number) => {
@@ -147,6 +162,8 @@ export default function BingoPlayPage(props: {
 
     sfx.correct();
     lockClaim(activeTileIndex, selectedTeam.id, true);
+    // leave modal open; user closes or you can close:
+    // setActiveTileIndex(null);
   };
 
   const resetClaimsOnly = () => {
@@ -155,22 +172,21 @@ export default function BingoPlayPage(props: {
     setTeams((prev) => recomputeTeams(prev, cleared));
   };
 
-  // ✅ stable persist function
   const persistLeaderboard = useCallback(
-    async (finalTeams: Team[]) => {
-      if (!mode || !nav?.topicCode) return;
+    async (finalTeamsSorted: Team[]) => {
+      if (mode === "aos" && nav.topicCode.trim().toLowerCase() === "avm") return;
+
       const { course, topic } = toLeaderboardFields(mode, nav.topicCode);
 
       await saveAllTeams(
         course,
         topic,
-        finalTeams.map((t) => ({ name: t.name, score: t.score }))
+        finalTeamsSorted.map((t) => ({ name: t.name, score: t.score }))
       );
     },
-    [mode, nav?.topicCode]
+    [mode, nav.topicCode]
   );
 
-  // ✅ stable end game function (guarded)
   const endGame = useCallback(async () => {
     if (endingRef.current) return;
     endingRef.current = true;
@@ -181,7 +197,7 @@ export default function BingoPlayPage(props: {
       await persistLeaderboard(sorted);
     } catch (e) {
       console.error("Failed to save leaderboard:", e);
-      // If you want to allow retry when save fails:
+      // If you want retry when save fails:
       // endingRef.current = false;
     }
 
@@ -189,7 +205,6 @@ export default function BingoPlayPage(props: {
     setEnded(true);
   }, [teams, persistLeaderboard]);
 
-  // ✅ auto end when all claimed
   useEffect(() => {
     if (ended) return;
     if (tiles.length !== 16) return;
@@ -235,7 +250,7 @@ export default function BingoPlayPage(props: {
   }
 
   return (
-    <div className="page">
+    <div className="page" style={{maxWidth: "70vw"}}>
       <div className="topbar">
         <div className="topLeft">
           <div className="topTitle">Game {props.game.toUpperCase().replace(/_/g, " ")}</div>
