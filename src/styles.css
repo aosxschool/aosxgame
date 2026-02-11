@@ -1766,8 +1766,9 @@ body{
 .map-canvas {
   display: flex;
   justify-content: center;
-  height: calc(100vh - 24px);
-  padding-top: 2.5%;
+  flex-wrap: wrap;
+  align-content: center;
+  height: 86vh;
 }
 
 /* Frame that defines map bounds */
@@ -1965,14 +1966,15 @@ body{
 .cwGrid{
   display:grid;
   grid-template-columns: repeat(9, 1fr);
-  gap: 6px;
+  gap: 7px;
   width: 100%;
+  height: 90%;
 }
 
 .cwCell{
   position: relative;
   aspect-ratio: 1 / 1;
-  border-radius: 20%;
+  border-radius: 15%;
   border: 1px solid rgba(255, 255, 255, 0.342);
   background: rgba(0,0,0,0.18);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
@@ -1986,7 +1988,7 @@ body{
 
 .cwNum{
   position:absolute;
-  top: 6px;
+  top: 5px;
   left: 7px;
   font-size: 12px;
   opacity: 0.75;
@@ -2019,8 +2021,7 @@ body{
 .cwCard{
   border: 1px solid var(--stroke);
   border-radius: var(--radius2);
-  padding: 2.5% 3%;
-  box-shadow: var(--shadow);
+  padding: 2.5% 4%;
   backdrop-filter: blur(12px);
   width: 45%;
   overflow: hidden;
@@ -2031,7 +2032,6 @@ body{
   border: 1px solid var(--stroke);
   border-radius: var(--radius2);
   padding: 40px;
-  box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
