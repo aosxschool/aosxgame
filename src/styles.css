@@ -1977,7 +1977,7 @@ body{
 .cwCell{
   position: relative;
   aspect-ratio: 1 / 1;
-  border-radius: 10px;
+  border-radius: 20%;
   border: 1px solid rgba(255, 255, 255, 0.342);
   background: rgba(0,0,0,0.18);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
@@ -2044,17 +2044,19 @@ body{
 .cwContainer{
   display: flex;
   justify-content: space-between;
+  max-height: 78vh;
 }
 
 .cwQuestions{
   display: flex;
   align-items: center;
-  padding: 12px 12px;
-  border-radius: 12px;
+  padding: 1.2vh;
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.16);
   border: 1px solid rgba(255, 255, 255, 0.493);
-  margin-bottom: 16px;
+  margin-bottom: 1.5%;
   font-weight: 500;
+  font-size: 80%;
 }
 
 .cwGood{
