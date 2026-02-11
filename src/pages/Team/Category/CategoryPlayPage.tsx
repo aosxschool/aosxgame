@@ -9,6 +9,9 @@ import TeamChipsBar from "../../../components/Team/TeamChipsBar";
 import CustomDragLayer from "../../../components/Bingo/CustomDragLayer";
 import CategoryBoard from "../../../components/Category/CategoryBoard";
 import CategoryQuestionModel from "../../../components/Category/CategoryQuestionModel";
+import QuestionRevealOverlay from "../../../components/Bingo/QuestionRevealOverlay";
+import CountdownOverlay from "../../../components/Bingo/CountdownOverlay";
+
 
 import type { CategoryTile } from "./categoryTypes";
 import { useCategoryGame } from "./useCategoryGame";
@@ -43,6 +46,11 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
 
   const { mode } = useParams<{ mode: "aos" | "aosx" }>();
   const endingRef = useRef(false);
+
+  const [pendingPick, setPendingPick] = useState<{ tileId: number; teamId: string } | null>(null);
+  const [revealOpen, setRevealOpen] = useState(false);
+  const [countdownOpen, setCountdownOpen] = useState(false);
+
 
   const persistLeaderboard = useCallback(
     async (finalTeams: Team[]) => {
@@ -194,24 +202,61 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
         </div>
       </div>
 
-      {/* draggable chips reused from bingo */}
       <TeamChipsBar
         teams={game.teams}
         selectedTeamId={game.selectedTeamId}
-        onSelect={game.setSelectedTeamId} // selection still ok even if you drag
+        onSelect={game.setSelectedTeamId}
       />
 
-      {/* 5×5 board: headers + point tiles */}
       <CategoryBoard
         tiles={game.tiles}
-        onDropTeamOnTile={(tileId, teamId) => game.pickTile(tileId, teamId)}
-        // optional click fallback:
-        // selectedTeamId={game.selectedTeamId}
-        // onClickPick={(tileId, teamId) => game.pickTile(tileId, teamId)}
+        onDropTeamOnTile={(tileId, teamId) => {
+          const tile = game.tiles.find((t) => t.id === tileId);
+          if (!tile || tile.used) return;
+
+          setPendingPick({ tileId, teamId });
+          setRevealOpen(true);
+        }}
       />
 
       <CustomDragLayer teams={game.teams} />
+      
+      <QuestionRevealOverlay
+        open={revealOpen}
+        tile={
+          pendingPick
+            ? ({
+                id: `cat-${pendingPick.tileId}`,
+                claimedByTeamId: undefined,
+                question: {
+                  category: game.tiles.find((t) => t.id === pendingPick.tileId)?.category ?? "",
+                  points: game.tiles.find((t) => t.id === pendingPick.tileId)?.points ?? 0,
+                  question: "", 
+                },
+              } as any)
+            : null
+        }
+        teams={game.teams}
+        onDone={() => {
+          setRevealOpen(false);
+          setCountdownOpen(true);
+        }}
+      />
 
+      <CountdownOverlay
+        open={countdownOpen}
+        seconds={3}
+        label="Question starting"
+        onDone={() => {
+          setCountdownOpen(false);
+          if (!pendingPick) return;
+
+          game.pickTile(pendingPick.tileId, pendingPick.teamId);
+          setPendingPick(null);
+        }}
+      />
+
+        
       <CategoryQuestionModel
         open={game.phase !== "board" && !!game.activeTile}
         phase={game.phase === "board" ? "question" : game.phase}

@@ -4,6 +4,8 @@ import { WFE_CROSSWORD } from "../../data/crossword";
 import { buildGrid, computeNumbersAll } from "../../utils/crossword";
 import CrosswordGrid from "../../components/WFE/Crossword/CrosswordGrid";
 import CrosswordClues from "../../components/WFE/Crossword/CrosswordClues";
+import ScrollContainer from "../../components/ui/ScrollContainer";
+
 
 type ReviewMode = "edit" | "review" | "solutions";
 
@@ -165,109 +167,111 @@ export default function CrosswordPage(props: { navigate: (to: string) => void; g
   }, [cells]);
 
   return (
-    <div className="cwPage">
-      <div className="topbar">
-        <div className="topLeft">
-          <div className="topTitle">WFE Crossword</div>
-          <div className="topSub">Tab to change direction • Arrow keys to move</div>
-        </div>
+    <ScrollContainer>
+      <div className="cwPage">
+        <div className="topbar">
+          <div className="topLeft">
+            <div className="topTitle">WFE Crossword</div>
+            <div className="topSub">Tab to change direction • Arrow keys to move</div>
+          </div>
 
-        <div className="topRight">
-          {reviewMode === "edit" && (
-            <>
-              <button className="btn-pill" onClick={clearEntries}>Clear</button>
-              <button
-                className="btn primary"
-                onClick={checkAnswers}
-                disabled={!allFilled}
-                title={!allFilled ? "Fill all blanks to submit." : "Submit"}
-              >
-                Submit
+          <div className="topRight">
+            {reviewMode === "edit" && (
+              <>
+                <button className="btn-pill" onClick={clearEntries}>Clear</button>
+                <button
+                  className="btn primary"
+                  onClick={checkAnswers}
+                  disabled={!allFilled}
+                  title={!allFilled ? "Fill all blanks to submit." : "Submit"}
+                >
+                  Submit
+                </button>
+              </>
+            )}
+
+            {reviewMode === "review" && (
+              <button className="btn-pill" onClick={viewCorrectAnswers}>
+                View Correct Answers
               </button>
-            </>
-          )}
+            )}
 
-          {reviewMode === "review" && (
-            <button className="btn-pill" onClick={viewCorrectAnswers}>
-              View Correct Answers
-            </button>
-          )}
-
-          {reviewMode === "solutions" && (
-            <>
-            <button className="btn-pill" onClick={retryPuzzle}>
-              Retry
-            </button>
-            <button className="btn-pill" onClick={backToYourAnswers}>
-              Back
-            </button>
-            </>
-            
-          )}
-        </div>
-      </div>
-
-      <div className="cwContainer">
-        <CrosswordGrid
-          size={puzzle.size}
-          cells={cells}
-          dir={dir}
-          active={active}
-          setActive={setActive}
-          setDir={setDir}
-          setEntryAt={setEntryAt}
-          reviewMode={reviewMode}
-          correctCells={correctCells}
-          wrongCells={wrongCells}
-        />
-
-        <CrosswordClues
-          clues={puzzle.clues}
-          clueStatus={clueStatus}
-          reviewMode={reviewMode}
-        />
-      </div>
-
-      {showModal && result && (
-        <div className="modalBackdrop">
-          <div className="modal">
-            <div className="modalHeader">
-              <div className="modalPts">
-                <div className="modalPtsNum">{result.score}</div>
-                <div className="modalPtsLab">SCORE</div>
-              </div>
-
-              <button className="btn primary" onClick={onOkFromModal}>
-                OK
+            {reviewMode === "solutions" && (
+              <>
+              <button className="btn-pill" onClick={retryPuzzle}>
+                Retry
               </button>
-            </div>
-
-            <div className="spacer" />
-
-            <div className="grid2">
-              <div className="rankRow">
-                <div className="rankLeft">
-                  <div className="rankName">Correct Clues</div>
-                </div>
-                <div className="rankScore">{result.correctClues}</div>
-              </div>
-
-              <div className="rankRow">
-                <div className="rankLeft">
-                  <div className="rankName">Wrong Clues</div>
-                </div>
-                <div className="rankScore">{result.wrongClues}</div>
-              </div>
-            </div>
-
-            <div className="spacer" />
-
-            <div className="hint">
-              {result.correctClues} correct × 10 points = <b>{result.score}</b>
-            </div>
+              <button className="btn-pill" onClick={backToYourAnswers}>
+                Back
+              </button>
+              </>
+              
+            )}
           </div>
         </div>
-      )}
-    </div>
+
+        <div className="cwContainer">
+          <CrosswordGrid
+            size={puzzle.size}
+            cells={cells}
+            dir={dir}
+            active={active}
+            setActive={setActive}
+            setDir={setDir}
+            setEntryAt={setEntryAt}
+            reviewMode={reviewMode}
+            correctCells={correctCells}
+            wrongCells={wrongCells}
+          />
+
+          <CrosswordClues
+            clues={puzzle.clues}
+            clueStatus={clueStatus}
+            reviewMode={reviewMode}
+          />
+        </div>
+
+        {showModal && result && (
+          <div className="modalBackdrop">
+            <div className="modal">
+              <div className="modalHeader">
+                <div className="modalPts">
+                  <div className="modalPtsNum">{result.score}</div>
+                  <div className="modalPtsLab">SCORE</div>
+                </div>
+
+                <button className="btn primary" onClick={onOkFromModal}>
+                  OK
+                </button>
+              </div>
+
+              <div className="spacer" />
+
+              <div className="grid2">
+                <div className="rankRow">
+                  <div className="rankLeft">
+                    <div className="rankName">Correct Clues</div>
+                  </div>
+                  <div className="rankScore">{result.correctClues}</div>
+                </div>
+
+                <div className="rankRow">
+                  <div className="rankLeft">
+                    <div className="rankName">Wrong Clues</div>
+                  </div>
+                  <div className="rankScore">{result.wrongClues}</div>
+                </div>
+              </div>
+
+              <div className="spacer" />
+
+              <div className="hint">
+                {result.correctClues} correct × 10 points = <b>{result.score}</b>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </ScrollContainer>
   );
 }

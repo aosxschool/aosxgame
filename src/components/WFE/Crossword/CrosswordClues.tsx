@@ -27,32 +27,29 @@ export default function CrosswordClues(props: {
   }
 
   return (
-    <div className="cwQuestionsContainer glow">
+    <div className="cwQuestionsContainer">
       <div className="cardTitle">Clues</div>
-
-      <div>
-        <div className="hint" style={{ marginBottom: 8 }}>
-          <b>Across</b>
-        </div>
-        {across.map((c) => (
-          <div key={`a-${c.number}`} className={clueRowClass(c)}>
-            <div className="rankNum">{c.number}</div>
-            <div>{c.text}</div>
+        <div>
+          <div className="hint" style={{ marginBottom: 8 }}>
+            <b>Across</b>
           </div>
-        ))}
-      </div>
+          {across.map((c) => (
+            <div key={`a-${c.number}`} className={clueRowClass(c)}>
+              <div className="rankNum">{c.number}</div>
+              <div>{c.text}</div>
+            </div>
+          ))}
 
-      <div>
-        <div className="hint" style={{ marginBottom: 8, marginTop: 12 }}>
-          <b>Down</b>
-        </div>
-        {down.map((c) => (
-          <div key={`d-${c.number}`} className={clueRowClass(c)}>
-            <div className="rankNum">{c.number}</div>
-            <div>{c.text}</div>
+          <div className="hint" style={{ marginBottom: 8, marginTop: 12 }}>
+            <b>Down</b>
           </div>
-        ))}
+          {down.map((c) => (
+            <div key={`d-${c.number}`} className={clueRowClass(c)}>
+              <div className="rankNum">{c.number}</div>
+              <div>{c.text}</div>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
   );
 }

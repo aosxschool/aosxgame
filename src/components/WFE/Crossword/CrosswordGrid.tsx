@@ -101,7 +101,7 @@ export default function CrosswordGrid(props: {
   }
 
   return (
-    <div className="cwCard glow">
+    <div className="cwCard">
       <div className="cardTitle">Grid</div>
 
       <div className="cwGrid" role="grid" aria-label="Crossword grid">

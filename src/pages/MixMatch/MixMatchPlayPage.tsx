@@ -329,7 +329,7 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
               onClick={() => setShowResult(false)}
             >
               <motion.div
-                className="mixMatchResultCard glow"
+                className="mixMatchResultCard"
                 initial={{ y: 18, scale: 0.96, opacity: 0 }}
                 animate={{ y: 0, scale: 1, opacity: 1 }}
                 exit={{ y: 18, scale: 0.96, opacity: 0 }}

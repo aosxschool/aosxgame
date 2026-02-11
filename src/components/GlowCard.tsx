@@ -4,7 +4,7 @@ export default function GlowCard(
   props: PropsWithChildren<{ className?: string; style?: React.CSSProperties }>
 ) {
   return (
-    <div className={`card glow ${props.className ?? ''}`} style={props.style}>
+    <div className={`card ${props.className ?? ''}`} style={props.style}>
       {props.children}
     </div>
   )
