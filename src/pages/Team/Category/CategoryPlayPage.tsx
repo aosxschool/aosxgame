@@ -202,7 +202,7 @@ export default function CategoryPlaypage(props: {
   }
 
   return (
-    <div className="page" style={{ maxWidth: "80%" }}>
+    <div className="page" style={{ maxWidth: "80%", overflow: "hidden" }}>
       <div className="topbar">
         <div className="topLeft">
           <div className="topTitle">Category</div>

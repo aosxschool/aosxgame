@@ -279,6 +279,7 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
 
   return (
     <div className="game-root" style={{overflow: "hidden"}}>
+      
       <MixMatchOptionBank
         options={puzzle.options}
         started={timer.started}
