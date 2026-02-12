@@ -39,10 +39,6 @@ export default function MixMatchOptionBank(props: {
           );
         })}
       </div>
-
-      <div className="hint" style={{ marginTop: 12 }}>
-        Tip: Used options are greyed out. After submit, green options are locked.
-      </div>
     </div>
   );
 }

@@ -15,11 +15,11 @@ function PlacedChip(props: {
 }) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: DND_OPTION,
-    canDrag: !props.locked, // ✅ green cannot move
+    canDrag: !props.locked,
     item: {
       type: DND_OPTION,
       optionId: props.optionId,
-      fromTileId: props.tileId, // ✅ so drop can move
+      fromTileId: props.tileId, 
     } satisfies DragOptionItem,
     collect: (m) => ({ isDragging: m.isDragging() }),
   }), [props.locked, props.optionId, props.tileId]);
@@ -56,13 +56,12 @@ export default function MixMatchTile(props: {
   optionLabelById: Record<string, string>;
 
   onDropOption: (tileId: string, optionId: string) => void;
-  onMoveOption: (fromTileId: string, toTileId: string, optionId: string) => void; // ✅
+  onMoveOption: (fromTileId: string, toTileId: string, optionId: string) => void; 
   onRemoveOption: (tileId: string, optionId: string) => void;
 }) {
   const [{ isOver, canDrop }, drop] = useDrop(() => ({
     accept: DND_OPTION,
     drop: (item: DragOptionItem) => {
-      // ✅ if dragged from another tile, move. else normal drop.
       if (item.fromTileId && item.fromTileId !== props.tile.id) {
         props.onMoveOption(item.fromTileId, props.tile.id, item.optionId);
       } else {
@@ -84,20 +83,20 @@ export default function MixMatchTile(props: {
         <div className="mixMatchTileTitle">{props.tile.title}</div>
       </div>
 
-      <div className="mixMatchPlaced">
+      <div>
         {props.placedOptionIds.length === 0 ? (
           <div className="mixMatchPlaceholder">Drop here</div>
         ) : (
           props.placedOptionIds.map((optId) => {
             const mark = props.optionStatus?.[optId];
-            const locked = mark === "correct"; // ✅ green locked
+            const locked = mark === "correct"; 
 
             return (
               <PlacedChip
                 key={optId}
                 tileId={props.tile.id}
                 optionId={optId}
-                label={props.optionLabelById[optId] ?? optId} // ✅ show actual value
+                label={props.optionLabelById[optId] ?? optId} 
                 mark={props.submitted ? mark : undefined}
                 locked={locked}
                 onRemove={props.onRemoveOption}

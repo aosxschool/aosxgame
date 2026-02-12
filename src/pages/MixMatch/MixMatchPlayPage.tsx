@@ -271,14 +271,14 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
     );
   }
 
-  function autoFillAllCorrect() { if (!puzzle) return; // start timer so submit works the same way
+  function autoFillAllCorrect() { if (!puzzle) return;
    timer.startIfNeeded(); const placements: Record<string, string[]> = {}; for (const t of puzzle.tiles) { placements[t.id] = [t.requiredOptionIds[0]]; } setState({ placements }); keepGreenClearRed(); setSubmitted(false); setOptionStatus({}); }
 
   const timeSeconds = Math.floor((timer.elapsedMs ?? 0) / 1000);
   const scorePreview = timeToScore(timeSeconds);
 
   return (
-    <div className="game-root">
+    <div className="game-root" style={{overflow: "hidden"}}>
       <MixMatchOptionBank
         options={puzzle.options}
         started={timer.started}
