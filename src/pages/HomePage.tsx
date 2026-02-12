@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { loadLeaderboard, clearLeaderboard, Course } from "../data/leaderboard.api";
 import { verifyAdminPassword } from "../utils/clearPassword";
+import PasswordModal from "../components/PasswordModal";
+
 
 type Row = {
   team_name: string;
@@ -33,6 +35,7 @@ export default function LeaderboardPage() {
   const [course, setCourse] = useState<Course>("aos");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pwOpen, setPwOpen] = useState(false);
 
 
   async function refresh() {
@@ -47,27 +50,15 @@ export default function LeaderboardPage() {
   }, [course]);
 
   async function onClear() {
-    const input = prompt("Enter admin password to clear leaderboard:");
-    if (input == null) return; 
-
-    if (!verifyAdminPassword(input)) {
-      window.alert("❌ Incorrect password.");
-      return;
-    }
-
-    const ok = confirm(
-      "⚠️ Clear ALL leaderboard data for this course?\nThis cannot be undone."
-    );
-    if (!ok) return;
-
-    await clearLeaderboard(course);
-    refresh();
+    setPwOpen(true);
   }
 
   const topics = COURSE_TOPICS[course];
 
   return (
     <div className="page leaderboardPage">
+      
+
       <div className="leaderHeader">
         <div className="leaderTitle">🏆 Team Leaderboard</div>
 
@@ -129,7 +120,32 @@ export default function LeaderboardPage() {
             </tbody>
           </table>
         </div>
+
       )}
+
+      <PasswordModal
+        open={pwOpen}
+        title="Admin Password:"
+        onCancel={() => setPwOpen(false)}
+        onConfirm={async (password) => {
+          if (password !== import.meta.env.VITE_ADMIN_PASSWORD) {
+            alert("Wrong password");
+            return;
+          }
+
+          setPwOpen(false);
+
+          const ok = confirm(
+            "⚠️ Clear ALL leaderboard data for this course?\nThis cannot be undone."
+          );
+          if (!ok) return;
+
+          await clearLeaderboard(course);
+          refresh();
+        }}
+      />
     </div>
+
+    
   );
 }

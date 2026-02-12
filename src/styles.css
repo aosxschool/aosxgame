@@ -2713,4 +2713,45 @@ body{
   overflow-y: auto;
 }
 
+.pwOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  height: 100vh
+}
 
+.pwCard {
+  width: 320px;
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(20, 28, 45, 0.95);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pwTitle {
+  font-weight: bolder;
+  font-size: 90%;
+}
+
+.pwInput {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,0.05);
+  color: white;
+}
+
+.pwActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
