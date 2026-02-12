@@ -23,7 +23,7 @@ export default function CategoryQuestionModel(props: {
 
   // answering team (question phase)
   selectedTeamId: string;
-  onSelectTeam: (teamId: string) => void; // kept for compatibility (not used in question phase)
+  onSelectTeam: (teamId: string) => void; 
 
   // steal phase team
   armedTeamId: string | null;
@@ -46,7 +46,6 @@ export default function CategoryQuestionModel(props: {
   const [teamMenuOpen, setTeamMenuOpen] = useState(false);
   const teamPickerRef = useRef<HTMLDivElement | null>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     if (!teamMenuOpen) return;
     const onDown = (e: MouseEvent) => {
@@ -57,7 +56,6 @@ export default function CategoryQuestionModel(props: {
     return () => document.removeEventListener("mousedown", onDown);
   }, [teamMenuOpen]);
 
-  // ESC: close dropdown if open else close modal
   useEffect(() => {
     if (!props.open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -70,7 +68,6 @@ export default function CategoryQuestionModel(props: {
     return () => window.removeEventListener("keydown", onKey);
   }, [props.open, teamMenuOpen, props.onClose]);
 
-  // Reset dropdown when modal closes
   useEffect(() => {
     if (!props.open) setTeamMenuOpen(false);
   }, [props.open]);
@@ -114,7 +111,6 @@ export default function CategoryQuestionModel(props: {
             transition={{ type: "spring", stiffness: 420, damping: 28 }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="modalHeader">
               <div className="modalPts">
                 <div className="modalPtsNum">{props.value}</div>
@@ -138,12 +134,10 @@ export default function CategoryQuestionModel(props: {
               <b>{props.category}</b>
             </div>
 
-            {/* ✅ Question phase: NO dropdown, just show answering team */}
             {props.phase === "question" && (
               <div className="modalTeamRow" style={{ marginTop: 14 }}>
                 <div className="modalTeamLabel">Answering team</div>
 
-                {/* Reuse the same "pill" look without dropdown */}
                 <div className="teamPicker">
                   <div className="teamSelectPro" style={{ cursor: "default" }}>
                     <span
@@ -157,7 +151,6 @@ export default function CategoryQuestionModel(props: {
                     <span className="teamScore">
                       {answeringTeam ? `${answeringTeam.score} pts` : ""}
                     </span>
-                    {/* no arrow */}
                     <span className="teamArrow" style={{ visibility: "hidden" }}>
                       ▾
                     </span>
@@ -166,7 +159,6 @@ export default function CategoryQuestionModel(props: {
               </div>
             )}
 
-            {/* ✅ Steal phase: Bingo-style dropdown */}
             {showStealPicker && (
               <div className="modalTeamRow" style={{ marginTop: 14 }}>
                 <div className="modalTeamLabel">Stealing team</div>
@@ -239,12 +231,10 @@ export default function CategoryQuestionModel(props: {
               </div>
             )}
 
-            {/* Question */}
             <div className="modalQuestion" style={{ marginTop: 14 }}>
               {props.question}
             </div>
 
-            {/* Options or Reveal */}
             {!inReveal ? (
               <div className="catOptions" style={{ marginTop: 14 }}>
                 {(["A", "B", "C", "D"] as CategoryOptionKey[]).map((k) => (
@@ -255,7 +245,6 @@ export default function CategoryQuestionModel(props: {
                       sfx.tap();
                       props.onAnswer(k);
                     }}
-                    // in steal phase, must pick steal team first
                     disabled={props.phase === "steal" && !props.armedTeamId}
                     style={{
                       width: "100%",

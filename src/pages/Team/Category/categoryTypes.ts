@@ -19,6 +19,7 @@ export type CategoryTile = {
   category: string;
   points: number;
   used: boolean;
+  claimedByTeamId?: string;
   question: CategoryQuestionRow;
 
   solvedByTeamId?: string;

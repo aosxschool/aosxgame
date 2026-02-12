@@ -2110,10 +2110,11 @@ body{
 }
 
 .catTile{
+  position: relative;
   border-radius: 14px;
-  padding: 16%;
-  border: 2px solid rgba(255, 255, 255, 0.137);
-  background: rgba(0,0,0,0.20);
+  padding: 20% 16%;
+  border: 1px solid rgba(255, 255, 255, 0.137);
+  background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05));
   cursor: pointer;
   text-align: center;
   transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
@@ -2122,8 +2123,44 @@ body{
 }
 
 .catTile:hover{
-  transform: translateY(-1px);
   border-color: rgba(255,255,255,0.18);
+}
+
+
+.catClaimPillWrap{
+  position: absolute;
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  right: 5%;
+  bottom: 8%
+}
+
+.catClaimPill{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  font-size: 60%;
+  color: white;
+  border: 1px solid
+}
+
+.catTeamDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  position: relative;
+  right: 10%;
+}
+
+.catTeamText {
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
 }
 
 .catTilePts{
@@ -2142,7 +2179,7 @@ body{
 
 /* disabled / used */
 .catTileUsed{
-  opacity: 0.45;
+  opacity: 0.65;
   cursor: not-allowed;
   transform: none !important;
 }

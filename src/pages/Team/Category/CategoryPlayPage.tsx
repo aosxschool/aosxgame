@@ -1,5 +1,4 @@
-
-import { useEffect, useState , useCallback, useRef} from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Navigate, useLocation, useParams } from "react-router-dom";
 import type { Team } from "../../../types";
 
@@ -9,51 +8,57 @@ import TeamChipsBar from "../../../components/Team/TeamChipsBar";
 import CustomDragLayer from "../../../components/Bingo/CustomDragLayer";
 import CategoryBoard from "../../../components/Category/CategoryBoard";
 import CategoryQuestionModel from "../../../components/Category/CategoryQuestionModel";
+
 import QuestionRevealOverlay from "../../../components/Bingo/QuestionRevealOverlay";
 import CountdownOverlay from "../../../components/Bingo/CountdownOverlay";
-
 
 import type { CategoryTile } from "./categoryTypes";
 import { useCategoryGame } from "./useCategoryGame";
 
-import EndPage from "../../EndPage"
+import EndPage from "../../EndPage";
 
-
-
-import { saveAllTeams } from '../../../data/leaderboard.api'
+import { saveAllTeams } from "../../../data/leaderboard.api";
 import { toLeaderboardFields } from "../../../data/leaderBoardConverter";
 
 type LocationState = {
   teams: Team[];
-  topicCode: string; // "bvm" or "mod1"
+  topicCode: string;
 };
 
-
-
-export default function CategoryPlaypage(props: { navigate: (to: string) => void; gameId: "category" }) {
-  const loc = useLocation()
-  const nav = loc.state as LocationState | null
-
-  const [loading, setLoading] = useState(true)
-  const [err, setErr] = useState<string | null>(null)
-  const [builtTiles, setBuiltTiles] = useState<CategoryTile[]>([])
-
-  const [ended, setEnded] = useState(false)
-  const [finalTeams, setFinalTeams] = useState<Team[]>([])
-
-  const topicCode = nav?.topicCode ?? ""
-  const initialTeams = nav?.teams ?? []
-
+export default function CategoryPlaypage(props: {
+  navigate: (to: string) => void;
+  gameId: "category";
+}) {
+  const loc = useLocation();
+  const nav = loc.state as LocationState | null;
   const { mode } = useParams<{ mode: "aos" | "aosx" }>();
+
+  // ✅ hooks must run regardless of nav
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [builtTiles, setBuiltTiles] = useState<CategoryTile[]>([]);
+
+  const [ended, setEnded] = useState(false);
+  const [finalTeams, setFinalTeams] = useState<Team[]>([]);
+
   const endingRef = useRef(false);
 
   const [pendingPick, setPendingPick] = useState<{ tileId: number; teamId: string } | null>(null);
   const [revealOpen, setRevealOpen] = useState(false);
   const [countdownOpen, setCountdownOpen] = useState(false);
 
+  // ✅ derive safe values even when nav is null
+  const topicCode = nav?.topicCode ?? "";
+  const initialTeams = nav?.teams ?? [];
+
+  // ✅ create game hook ALWAYS (even if initialTeams empty)
+  const game = useCategoryGame({
+    initialTeams,
+    tiles: builtTiles,
+  });
 
   const persistLeaderboard = useCallback(
-    async (finalTeams: Team[]) => {
+    async (finalTeamsToSave: Team[]) => {
       if (!mode || !topicCode) return;
 
       const { course, topic } = toLeaderboardFields(mode, topicCode);
@@ -61,28 +66,39 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
       await saveAllTeams(
         course,
         topic,
-        finalTeams.map((t) => ({ name: t.name, score: t.score }))
+        finalTeamsToSave.map((t) => ({ name: t.name, score: t.score }))
       );
     },
     [mode, topicCode]
   );
 
-
+  // ✅ load questions only if topicCode exists
   useEffect(() => {
-    if (!topicCode) return
+    if (!topicCode) {
+      setLoading(false);
+      setBuiltTiles([]);
+      return;
+    }
 
-    let cancelled = false
+    let cancelled = false;
+
     async function run() {
-      setLoading(true)
-      setErr(null)
+      setLoading(true);
+      setErr(null);
+
       try {
-        const rows = await loadCategoryQuestions(topicCode)
+        const rows = await loadCategoryQuestions(topicCode);
 
         const tiles: CategoryTile[] = rows.map((q, i) => ({
           id: i + 1,
           category: q.category,
           points: q.points,
+
+          // keep your type satisfied
           used: false,
+          solvedByTeamId: undefined,
+          claimedByTeamId: undefined,
+
           question: {
             id: q.id,
             game_code: q.game_code,
@@ -95,31 +111,24 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
             d: q.option_d,
             correct: q.correct_option,
           },
-        }))
+        }));
 
-        if (!cancelled) setBuiltTiles(tiles)
+        if (!cancelled) setBuiltTiles(tiles);
       } catch (e: any) {
-        if (!cancelled) setErr(String(e?.message ?? e))
+        if (!cancelled) setErr(String(e?.message ?? e));
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setLoading(false);
       }
     }
 
-    run()
+    run();
     return () => {
-      cancelled = true
-    }
-  }, [topicCode])
-
-  const game = useCategoryGame({
-    initialTeams,
-    tiles: builtTiles,
-  })
-
-  
+      cancelled = true;
+    };
+  }, [topicCode]);
 
   const endGame = useCallback(async () => {
-    if (endingRef.current) return;   
+    if (endingRef.current) return;
     endingRef.current = true;
 
     const sorted = [...game.teams].sort((a, b) => b.score - a.score);
@@ -128,25 +137,32 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
       await persistLeaderboard(sorted);
     } catch (e) {
       console.error("Failed to save leaderboard:", e);
-      // If you want, allow retry:
-      // endingRef.current = false;
     }
 
     setFinalTeams(sorted);
     setEnded(true);
   }, [game.teams, persistLeaderboard]);
 
+  // ✅ end when all used
   useEffect(() => {
-    if (ended) return
-    if (game.tiles.length === 0) return
+    if (ended) return;
+    if (game.tiles.length === 0) return;
 
-    const allUsed = game.tiles.every((t) => t.used)
-    if (allUsed) endGame()
-  }, [game.tiles, ended])
+    const allUsed = game.tiles.every((t) => t.used);
+    if (allUsed) void endGame();
+  }, [game.tiles, ended, endGame]);
 
-  // ✅ now you can safely do early returns
+  const teamsById = useMemo(() => {
+    const m: Record<string, Team> = {};
+    for (const t of game.teams) m[t.id] = t;
+    return m;
+  }, [game.teams]);
+
+  const pendingTile = pendingPick ? game.tiles.find((t) => t.id === pendingPick.tileId) : null;
+
+  // ✅ NOW do early returns (after hooks)
   if (!nav?.teams?.length || !nav.topicCode) {
-    return <Navigate to="/home" replace />
+    return <Navigate to="/home" replace />;
   }
 
   if (ended) {
@@ -156,7 +172,7 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
         onRestart={() => props.navigate("/home")}
         onLeaderboard={() => props.navigate("/home")}
       />
-    )
+    );
   }
 
   if (loading) {
@@ -164,7 +180,7 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
       <div className="page" style={{ maxWidth: "80%" }}>
         <div className="loader">Loading category questions…</div>
       </div>
-    )
+    );
   }
 
   if (err) {
@@ -172,7 +188,7 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
       <div className="page" style={{ maxWidth: "80%" }}>
         <div className="hint">Failed: {err}</div>
       </div>
-    )
+    );
   }
 
   if (!builtTiles.length) {
@@ -182,12 +198,12 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
           No category questions found for <b>{nav.topicCode}</b>.
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="page" style={{maxWidth: "80%"}}>
-        <div className="topbar">
+    <div className="page" style={{ maxWidth: "80%" }}>
+      <div className="topbar">
         <div className="topLeft">
           <div className="topTitle">Category</div>
           <div className="topSub">
@@ -196,20 +212,17 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
         </div>
 
         <div className="topRight">
-          <button className="btn danger" onClick={endGame}>
+          <button className="btn danger" onClick={() => void endGame()}>
             End Game
           </button>
         </div>
       </div>
 
-      <TeamChipsBar
-        teams={game.teams}
-        selectedTeamId={game.selectedTeamId}
-        onSelect={game.setSelectedTeamId}
-      />
+      <TeamChipsBar teams={game.teams} selectedTeamId={game.selectedTeamId} onSelect={game.setSelectedTeamId} />
 
       <CategoryBoard
         tiles={game.tiles}
+        teamsById={teamsById}
         onDropTeamOnTile={(tileId, teamId) => {
           const tile = game.tiles.find((t) => t.id === tileId);
           if (!tile || tile.used) return;
@@ -220,18 +233,18 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
       />
 
       <CustomDragLayer teams={game.teams} />
-      
+
       <QuestionRevealOverlay
         open={revealOpen}
         tile={
-          pendingPick
+          pendingTile
             ? ({
-                id: `cat-${pendingPick.tileId}`,
+                id: `cat-${pendingTile.id}`,
                 claimedByTeamId: undefined,
                 question: {
-                  category: game.tiles.find((t) => t.id === pendingPick.tileId)?.category ?? "",
-                  points: game.tiles.find((t) => t.id === pendingPick.tileId)?.points ?? 0,
-                  question: "", 
+                  category: pendingTile.category,
+                  points: pendingTile.points,
+                  question: "",
                 },
               } as any)
             : null
@@ -256,7 +269,6 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
         }}
       />
 
-        
       <CategoryQuestionModel
         open={game.phase !== "board" && !!game.activeTile}
         phase={game.phase === "board" ? "question" : game.phase}
@@ -278,7 +290,6 @@ export default function CategoryPlaypage(props: { navigate: (to: string) => void
         revealState={game.revealState}
         onAcknowledgeReveal={game.acknowledgeReveal}
         onClose={game.closeModal}
-
       />
     </div>
   );

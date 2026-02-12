@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { loadLeaderboard, clearLeaderboard, Course } from "../data/leaderboard.api";
+import { verifyAdminPassword } from "../utils/clearPassword";
 
 type Row = {
   team_name: string;
@@ -46,6 +47,14 @@ export default function LeaderboardPage() {
   }, [course]);
 
   async function onClear() {
+    const input = prompt("Enter admin password to clear leaderboard:");
+    if (input == null) return; 
+
+    if (!verifyAdminPassword(input)) {
+      window.alert("❌ Incorrect password.");
+      return;
+    }
+
     const ok = confirm(
       "⚠️ Clear ALL leaderboard data for this course?\nThis cannot be undone."
     );

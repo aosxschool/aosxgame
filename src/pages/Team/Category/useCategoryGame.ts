@@ -13,30 +13,20 @@ export type RevealState = {
 
 export function useCategoryGame(opts: {
   initialTeams: Team[];
-  tiles: CategoryTile[]; // ✅ IMPORTANT: always take latest tiles from loader
+  tiles: CategoryTile[];
 }) {
   const [teams, setTeams] = useState<Team[]>(opts.initialTeams);
-
-  // tiles come from loader; keep in state so we can mark used/solved
   const [tiles, setTiles] = useState<CategoryTile[]>(opts.tiles);
 
-  // ✅ sync tiles whenever loader supplies new ones
   useEffect(() => {
     setTiles(opts.tiles);
   }, [opts.tiles]);
 
-  // selected team (used for board drop and default answering team)
   const [selectedTeamId, setSelectedTeamId] = useState<string>(opts.initialTeams[0]?.id ?? "");
-
-  // flow
   const [phase, setPhase] = useState<CategoryPhase>("board");
   const [activeTileId, setActiveTileId] = useState<number | null>(null);
-
-  // steal flow
   const [armedTeamId, setArmedTeamId] = useState<string | null>(null);
   const [attemptedTeamIds, setAttemptedTeamIds] = useState<Set<string>>(new Set());
-
-  // reveal
   const [revealState, setRevealState] = useState<RevealState | null>(null);
 
   const activeTile = useMemo(() => {
@@ -59,24 +49,21 @@ export function useCategoryGame(opts: {
         t.id === tileId
           ? {
               ...t,
-              used: true,
-              // optional field (recommended to add in categoryTypes)
-              solvedByTeamId,
+              claimedByTeamId: solvedByTeamId,
             }
           : t
       )
     );
   }
 
-  /** Board pick (called by drop) */
   function pickTile(tileId: number, teamId: string) {
     const tile = tiles.find((t) => t.id === tileId);
-    if (!tile || tile.used) return;
+
+    if (!tile || tile.claimedByTeamId) return;
 
     setSelectedTeamId(teamId);
     setActiveTileId(tileId);
 
-    // reset per-question state
     setAttemptedTeamIds(new Set([teamId]));
     setArmedTeamId(null);
     setRevealState(null);
@@ -84,16 +71,16 @@ export function useCategoryGame(opts: {
     setPhase("question");
   }
 
-  /** Steal: choose which other team is attempting */
   function armTeam(teamId: string) {
     if (phase !== "steal") return;
     if (attemptedTeamIds.has(teamId)) return;
     setArmedTeamId(teamId);
   }
 
-  /** Submit answer from modal */
   function submitAnswer(chosen: CategoryOptionKey) {
     if (!activeTile) return;
+
+    if (activeTile.claimedByTeamId) return;
 
     const correct = activeTile.question.correct;
     const isCorrect = chosen === correct;
@@ -120,20 +107,17 @@ export function useCategoryGame(opts: {
       return;
     }
 
-    // ❌ WRONG
-    // Update attempted set using functional update so it’s never stale
+    // wrong answer flow (steal logic stays the same)
     setAttemptedTeamIds((prev) => {
       const next = new Set(prev);
       next.add(answeringTeamId);
 
-      // if first attempt wrong -> enter steal mode
       if (phase === "question") {
         setArmedTeamId(null);
         setPhase("steal");
         return next;
       }
 
-      // steal wrong -> clear armed, continue steal unless everyone attempted
       setArmedTeamId(null);
 
       if (next.size >= teams.length) {
@@ -154,7 +138,6 @@ export function useCategoryGame(opts: {
     });
   }
 
-  /** Close reveal and return to board */
   function acknowledgeReveal() {
     setRevealState(null);
     setActiveTileId(null);
@@ -163,9 +146,7 @@ export function useCategoryGame(opts: {
     setPhase("board");
   }
 
-  /** Close modal (optional “X” button) */
   function closeModal() {
-    // If you want to prevent closing during question/steal, remove this.
     setRevealState(null);
     setActiveTileId(null);
     setAttemptedTeamIds(new Set());
@@ -174,30 +155,24 @@ export function useCategoryGame(opts: {
   }
 
   return {
-    // state
     teams,
     tiles,
     phase,
     activeTile,
 
-    // selection
     selectedTeamId,
     setSelectedTeamId,
 
-    // steal
     armedTeamId,
     armTeam,
     selectableTeams,
 
-    // actions
     pickTile,
     submitAnswer,
 
-    // reveal
     revealState,
     acknowledgeReveal,
 
-    // modal
     closeModal,
   };
 }
