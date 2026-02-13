@@ -21,10 +21,10 @@ export function AppNavBar(props: {
     <div className="navbar">
       <div className="navbar_inner">
         <div className="navbar_brand">
-          <div className="brand_logo">A</div>
+          <img src="/aosxgame/src/assets/aosxlogo.png" alt="A" className="brand_logo" />
           <div className="brand_text">
-            <div className="brand_title">AOSX</div>
-            <div className="brand_subtitle">AOSX School Games</div>
+            <div className="brand_title">AOSX School</div>
+            <div className="brand_subtitle">Game Hub</div>
           </div>
         </div>
 

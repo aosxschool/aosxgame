@@ -1344,10 +1344,9 @@ body{
 }
 
 .brand_logo {
-  width: 34px;
-  height: 34px;
+  height: 2.5vw;
+  overflow: hidden;
   border-radius: 10px;
-  background: rgba(0,0,0,0.08);
   display: inline-flex;
   align-items: center;
   justify-content: center;

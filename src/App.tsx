@@ -27,17 +27,6 @@ import {
   isTeamMode,
 } from "./data/appConfig";
 
-function BlankPage({ title }: { title: string }) {
-  return (
-    <div className="page">
-      <div className="hero compact">
-        <div className="brand">AOSX School Game</div>
-        <h1 className="title">{title}</h1>
-      </div>
-    </div>
-  );
-}
-
 function AppRoutes() {
   const location = useLocation();
   const rrNavigate = useNavigate();
@@ -46,7 +35,6 @@ function AppRoutes() {
   const [authed, setAuthed] = useState<boolean>(false);
   const [authReady, setAuthReady] = useState<boolean>(false);
 
-  // Supabase auth session (persists automatically)
   useEffect(() => {
     let mounted = true;
 
@@ -76,7 +64,6 @@ function AppRoutes() {
     []
   );
 
-  // Hard gate: nothing except /login is accessible when not authed
   const RequireAuth = ({ children }: { children: React.ReactNode }) => {
     if (!authReady) return null;
     if (!authed) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
@@ -85,10 +72,6 @@ function AppRoutes() {
 
   const hideNav = location.pathname === "/login" || !authed;
 
-  /**
-   * Dispatcher for `/:mode/:gameId/start`
-   * Only single-player games have a start/instructions screen.
-   */
   function StartDispatcher() {
     const { mode, gameId } = useParams<{ mode: string; gameId: string }>();
     if (!mode || !gameId) return <Navigate to="/home" replace />;
@@ -97,10 +80,6 @@ function AppRoutes() {
     return <SinglePlayerStartPage navigate={navigate} />;
   }
 
-  /**
-   * Dispatcher for `/:mode/:gameId/lobby`
-   * Only team games have a lobby.
-   */
   function LobbyDispatcher() {
     const { mode, gameId } = useParams<{ mode: string; gameId: string }>();
     if (!mode || !gameId) return <Navigate to="/home" replace />;
@@ -115,11 +94,6 @@ function AppRoutes() {
     );
   }
 
-  /**
-   * Shared play route for both team + single-player:
-   * - Team games come from lobby -> /:mode/:gameId/play
-   * - Single-player start screen -> /:mode/:gameId/play
-   */
   function PlayDispatcher() {
     const { mode, gameId } = useParams<{ mode: string; gameId: string }>();
     if (!mode || !gameId) return <Navigate to="/home" replace />;
@@ -153,16 +127,13 @@ function AppRoutes() {
           )}
 
           <Routes location={location} key={location.pathname}>
-            {/* Default entry: login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
 
-            {/* Public */}
             <Route
               path="/login"
               element={<InstructorLoginPage navigate={navigate} onLogin={() => navigate("/home")} />}
             />
 
-            {/* Protected */}
             <Route
               path="/home"
               element={
@@ -172,7 +143,6 @@ function AppRoutes() {
               }
             />
 
-            {/* Single-player start */}
             <Route
               path="/:mode/:gameId/start"
               element={
@@ -182,7 +152,6 @@ function AppRoutes() {
               }
             />
 
-            {/* Team lobby */}
             <Route
               path="/:mode/:gameId/lobby"
               element={
@@ -192,7 +161,6 @@ function AppRoutes() {
               }
             />
 
-            {/* Shared play */}
             <Route
               path="/:mode/:gameId/play"
               element={
@@ -202,7 +170,6 @@ function AppRoutes() {
               }
             />
 
-            {/* Unknown route */}
             <Route
               path="*"
               element={authReady && authed ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />}
