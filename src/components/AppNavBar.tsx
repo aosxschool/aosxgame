@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { APP_NAV, type NavItem } from "../data/appConfig";
+import aosxlogo from "../assets/aosxlogo.png"
 
 function cx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(" ");
@@ -21,7 +22,7 @@ export function AppNavBar(props: {
     <div className="navbar">
       <div className="navbar_inner">
         <div className="navbar_brand">
-          <img src="/aosxgame/src/assets/aosxlogo.png" alt="A" className="brand_logo" />
+          <img src={aosxlogo} alt="A" className="brand_logo" />
           <div className="brand_text">
             <div className="brand_title">AOSX School</div>
             <div className="brand_subtitle">Game Hub</div>
