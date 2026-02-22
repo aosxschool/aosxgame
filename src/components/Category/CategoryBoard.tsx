@@ -18,7 +18,7 @@ function uniqPreserveOrder(arr: string[]) {
 
 export default function CategoryBoard(props: {
   tiles: CatTile[];
-  teamsById: Record<string, Team>; // ✅ required now
+  teamsById: Record<string, Team>; 
   onDropTeamOnTile: (tileId: number, teamId: string) => void;
 
   selectedTeamId?: string;
@@ -75,7 +75,7 @@ export default function CategoryBoard(props: {
               <CategoryTile
                 key={`${cat}-${pts}-${tile.id}`}
                 tile={tile}
-                teamsById={props.teamsById} // ✅ pass map
+                teamsById={props.teamsById} 
                 onDropTeam={(teamId) => props.onDropTeamOnTile(tile.id, teamId)}
                 onClickPick={
                   props.onClickPick && props.selectedTeamId

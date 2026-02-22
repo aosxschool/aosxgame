@@ -1,4 +1,5 @@
 import CategoryTile from "./CategoryTile";
+import type { Team } from "../../types";
 import type { CategoryTile as CategoryTileType } from "../../pages/Team/Category/categoryTypes";
 
 export default function CategoryCard(props: {
@@ -6,12 +7,13 @@ export default function CategoryCard(props: {
   open: boolean;
   onToggleOpen: () => void;
 
-  tiles: CategoryTileType[]; // tiles in this category
+  tiles: CategoryTileType[];
+  teamsById: Record<string, Team>; 
+
   onDropTeamOnTile: (tileId: number, teamId: string) => void;
 }) {
-  const { title, open, onToggleOpen, tiles, onDropTeamOnTile } = props;
+  const { title, open, onToggleOpen, tiles, teamsById, onDropTeamOnTile } = props;
 
-  // Sort by points so it shows 10/20/30/40 in order
   const sorted = [...tiles].sort((a, b) => a.points - b.points);
 
   return (
@@ -27,7 +29,8 @@ export default function CategoryCard(props: {
             {sorted.map((t) => (
               <CategoryTile
                 key={t.id}
-                tile={t} // ✅ FIX: pass ONE tile, not the whole array
+                tile={t}
+                teamsById={teamsById} 
                 onDropTeam={(teamId) => onDropTeamOnTile(t.id, teamId)}
               />
             ))}

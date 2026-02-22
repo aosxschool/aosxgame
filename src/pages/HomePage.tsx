@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { loadLeaderboard, clearLeaderboard, Course } from "../data/leaderboard.api";
-import { verifyAdminPassword } from "../utils/clearPassword";
 import PasswordModal from "../components/PasswordModal";
 
 
