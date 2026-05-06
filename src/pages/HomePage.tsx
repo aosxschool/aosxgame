@@ -55,94 +55,96 @@ export default function LeaderboardPage() {
   const topics = COURSE_TOPICS[course];
 
   return (
-    <div className="page leaderboardPage">
-      
+    <div className="page leaderboardPage" style={{display:"block"}}>
+      <div style={{maxWidth: "70vw"}}>
 
-      <div className="leaderHeader">
-        <div className="leaderTitle">🏆 Team Leaderboard</div>
 
-        <div className="leaderTabs">
-          <button
-            className={`btn-pill ${course === "aos" ? "active" : ""}`}
-            onClick={() => setCourse("aos")}
-          >
-            AOS
-          </button>
+        <div className="leaderHeader">
+          <div className="leaderTitle">🏆 Team Leaderboard</div>
 
-          <button
-            className={`btn-pill ${course === "aosx" ? "active" : ""}`}
-            onClick={() => setCourse("aosx")}
-          >
-            AOSX
-          </button>
-          <button className="btn clear" onClick={onClear}>
-            Clear All
-          </button>
+          <div className="leaderTabs">
+            <button
+              className={`btn-pill ${course === "aos" ? "active" : ""}`}
+              onClick={() => setCourse("aos")}
+            >
+              AOS
+            </button>
+
+            <button
+              className={`btn-pill ${course === "aosx" ? "active" : ""}`}
+              onClick={() => setCourse("aosx")}
+            >
+              AOSX
+            </button>
+            <button className="btn clear" onClick={onClear}>
+              Clear All
+            </button>
+          </div>
+
         </div>
 
-      </div>
-
-      {loading ? (
-        <div className="loader">Loading leaderboard…</div>
-      ) : (
-        <div className="leaderCard">
-          <table className="leaderTable">
-            <thead>
-              <tr>
-                <th>Ranking</th>
-                <th>Team</th>
-
-                {topics.map((t) => (
-                  <th key={t}>{labelConvert(t)} </th>
-                ))}
-
-                <th className="totalCol">Total</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {rows.map((r, i) => (
-                <tr key={r.team_name}>
-                  <td className="rank">{i + 1}</td>
-
-                  <td className="teamCell">
-                    {r.team_name}
-                  </td>
+        {loading ? (
+          <div className="loader">Loading leaderboard…</div>
+        ) : (
+          <div className="leaderCard">
+            <table className="leaderTable">
+              <thead>
+                <tr>
+                  <th>Ranking</th>
+                  <th>Team</th>
 
                   {topics.map((t) => (
-                    <td key={t}>{(r as any)[t]}</td>
+                    <th key={t}>{labelConvert(t)} </th>
                   ))}
 
-                  <td className="totalScore">{r.total_score}</td>
+                  <th className="totalCol">Total</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
 
-      )}
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={r.team_name}>
+                    <td className="rank">{i + 1}</td>
 
-      <PasswordModal
-        open={pwOpen}
-        title="Admin Password:"
-        onCancel={() => setPwOpen(false)}
-        onConfirm={async (password) => {
-          if (password !== import.meta.env.VITE_ADMIN_PASSWORD) {
-            alert("Wrong password");
-            return;
-          }
+                    <td className="teamCell">
+                      {r.team_name}
+                    </td>
 
-          setPwOpen(false);
+                    {topics.map((t) => (
+                      <td key={t}>{(r as any)[t]}</td>
+                    ))}
 
-          const ok = confirm(
-            "⚠️ Clear ALL leaderboard data for this course?\nThis cannot be undone."
-          );
-          if (!ok) return;
+                    <td className="totalScore">{r.total_score}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          await clearLeaderboard(course);
-          refresh();
-        }}
-      />
+        )}
+
+        <PasswordModal
+          open={pwOpen}
+          title="Admin Password:"
+          onCancel={() => setPwOpen(false)}
+          onConfirm={async (password) => {
+            if (password !== import.meta.env.VITE_ADMIN_PASSWORD) {
+              alert("Wrong password");
+              return;
+            }
+
+            setPwOpen(false);
+
+            const ok = confirm(
+              "⚠️ Clear ALL leaderboard data for this course?\nThis cannot be undone."
+            );
+            if (!ok) return;
+
+            await clearLeaderboard(course);
+            refresh();
+          }}
+        />
+      </div>
     </div>
 
     

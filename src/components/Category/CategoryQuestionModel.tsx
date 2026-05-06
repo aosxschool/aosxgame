@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Team } from "../../types";
 import { sfx } from "../../utils/sfx";
+import CountdownTimer from "../Common/CountdownTimer";
 import type {
   CategoryOptionKey,
   CategoryPhase,
@@ -17,6 +18,7 @@ type RevealState = {
 };
 
 export default function CategoryQuestionModel(props: {
+  onTimeout: (() => void) | undefined;
   open: boolean;
   phase: Exclude<CategoryPhase, "board">;
   teams: Team[];
@@ -116,18 +118,14 @@ export default function CategoryQuestionModel(props: {
                 <div className="modalPtsNum">{props.value}</div>
                 <div className="modalPtsLab">points</div>
               </div>
+              <div style={{display: "flex"}}>
+                <CountdownTimer
+                  active={props.open && props.phase !== "reveal"}
+                  durationSeconds={15}
+                  onTimeout={props.onTimeout}
+                />
 
-              <button
-                type="button"
-                className="btn ghost"
-                onClick={() => {
-                  sfx.tap();
-                  props.onClose();
-                }}
-                aria-label="Close"
-              >
-                ✕
-              </button>
+              </div>
             </div>
 
             <div className="hint" style={{ marginTop: 8 }}>

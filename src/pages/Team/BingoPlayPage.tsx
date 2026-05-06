@@ -250,64 +250,66 @@ export default function BingoPlayPage(props: {
   }
 
   return (
-    <div className="page" style={{maxWidth: "70vw"}}>
-      <div className="topbar">
-        <div className="topLeft">
-          <div className="topTitle">Game {props.game.toUpperCase().replace(/_/g, " ")}</div>
-          <div className="topSub">
-            {usedTiles}/16 tiles claimed • Drag a team onto an empty tile to answer (locked after correct)
+      <div className="page">
+        <div style={{maxWidth: "70vw"}}>
+          <div className="topbar">
+            <div className="topLeft">
+              <div className="topTitle">Game {props.game.toUpperCase().replace(/_/g, " ")}</div>
+              <div className="topSub">
+                {usedTiles}/16 tiles claimed • Drag a team onto an empty tile to answer (locked after correct)
+              </div>
+            </div>
+            <div className="topRight">
+              <button className="btn ghost" onClick={resetClaimsOnly}>
+                Reset Board
+              </button>
+              <button className="btn danger" onClick={() => void endGame()}>
+                End Game
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="topRight">
-          <button className="btn ghost" onClick={resetClaimsOnly}>
-            Reset Board
-          </button>
-          <button className="btn danger" onClick={() => void endGame()}>
-            End Game
-          </button>
-        </div>
+        
+        <TeamChipsBar teams={teams} selectedTeamId={selectedTeamId} onSelect={setSelectedTeamId} />
+
+        <BingoBoard tiles={tiles} teams={teams} onTileDropTeam={onTileDropTeam} />
+
+        <CustomDragLayer teams={teams} />
+
+        <QuestionRevealOverlay
+          open={revealOpen}
+          tile={pendingTileIndex !== null ? tiles[pendingTileIndex] : null}
+          teams={teams}
+          onDone={() => {
+            setRevealOpen(false);
+            setCountdownOpen(true);
+          }}
+        />
+
+        <CountdownOverlay
+          open={countdownOpen}
+          seconds={3}
+          label="Question starting"
+          onDone={() => {
+            setCountdownOpen(false);
+            if (pendingTileIndex !== null) {
+              setActiveTileIndex(pendingTileIndex);
+              setPendingTileIndex(null);
+            }
+          }}
+        />
+
+        <QuestionModal
+          open={activeTileIndex !== null}
+          tile={activeTileIndex !== null ? tiles[activeTileIndex] : null}
+          team={selectedTeam}
+          teams={teams}
+          selectedTeamId={selectedTeamId}
+          onSelectTeam={setSelectedTeamId}
+          onClose={() => setActiveTileIndex(null)}
+          onCorrect={markCorrect}
+          onWrong={markWrong}
+        />
       </div>
-
-      <TeamChipsBar teams={teams} selectedTeamId={selectedTeamId} onSelect={setSelectedTeamId} />
-
-      <BingoBoard tiles={tiles} teams={teams} onTileDropTeam={onTileDropTeam} />
-
-      <CustomDragLayer teams={teams} />
-
-      <QuestionRevealOverlay
-        open={revealOpen}
-        tile={pendingTileIndex !== null ? tiles[pendingTileIndex] : null}
-        teams={teams}
-        onDone={() => {
-          setRevealOpen(false);
-          setCountdownOpen(true);
-        }}
-      />
-
-      <CountdownOverlay
-        open={countdownOpen}
-        seconds={3}
-        label="Question starting"
-        onDone={() => {
-          setCountdownOpen(false);
-          if (pendingTileIndex !== null) {
-            setActiveTileIndex(pendingTileIndex);
-            setPendingTileIndex(null);
-          }
-        }}
-      />
-
-      <QuestionModal
-        open={activeTileIndex !== null}
-        tile={activeTileIndex !== null ? tiles[activeTileIndex] : null}
-        team={selectedTeam}
-        teams={teams}
-        selectedTeamId={selectedTeamId}
-        onSelectTeam={setSelectedTeamId}
-        onClose={() => setActiveTileIndex(null)}
-        onCorrect={markCorrect}
-        onWrong={markWrong}
-      />
     </div>
   );
 }

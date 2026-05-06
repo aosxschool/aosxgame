@@ -30,7 +30,6 @@ body{
   background:
     radial-gradient(900px 600px at 10% 10%, rgba(11, 148, 172, 0.185), transparent 60%),
     radial-gradient(900px 650px at 90% 20%, rgba(77, 255, 246, 0.14), transparent 55%),
-    radial-gradient(900px 650px at 60% 100%, rgba(255, 210, 77, 0.10), transparent 50%),
     radial-gradient(700px 500px at 55% 45%, rgba(77, 166, 255, 0.10), transparent 55%),
     linear-gradient(135deg, var(--bg1), var(--bg2));
   position: relative;
@@ -45,10 +44,28 @@ body{
   opacity: 0.18;
 }
 
+
 .page{
   padding: 28px 18px 38px;
-  max-width: 60vw;
+  max-width: 100vw;
   margin: 0 auto;
+  overflow-y: auto;
+  height: 90vh;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 10vh;
+}
+
+
+.page::-webkit-scrollbar{
+  width: 8px;
+  
+}
+
+.page::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 999px;
+  
 }
 
 .hero{
@@ -527,6 +544,7 @@ body{
   display:grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1vw;
+  padding-bottom: 0.2vh;
 }
 @media (max-width: 560px){
   .board{ gap: 10px; }
@@ -1372,6 +1390,7 @@ body{
   align-items: center;
   gap: 6px;
   flex: 1;
+  font-weight: 600;
 }
 
 .navlink {
@@ -1637,10 +1656,10 @@ body{
 }
 
 .options-panel {
-  width: 260px;
+  width: 250px;
   background: linear-gradient(180deg, #020617, #020617);
   border-right: 1px solid #1e293b;
-  padding: 18px 12px 12px 12px;
+  padding: 18px 12px 12px 1px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -1662,7 +1681,7 @@ body{
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
-  padding-right: 4px;
+  padding-right: 8px;
   padding-bottom: 30%
 }
 
@@ -1671,6 +1690,8 @@ body{
 /* Scrollbar */
 .options-list::-webkit-scrollbar {
   width: 6px;
+  position: relative;
+  left: 10px;
 }
 .options-list::-webkit-scrollbar-thumb {
   background: #1e293b;
@@ -1768,13 +1789,25 @@ body{
   flex-wrap: wrap;
   align-content: center;
   height: 85.5vh;
+  overflow: auto;
+}
+
+.map-canvas::-webkit-scrollbar{
+  width: 8px;
+  position: relative;
+  right: 10px;
+}
+
+.map-canvas::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 999px;
+  
 }
 
 /* Frame that defines map bounds */
 .map-frame {
   position: relative;
   height: 80vh;
-  overflow: hidden;
 }
 
 /* Map image */
@@ -2036,7 +2069,7 @@ body{
   flex-direction: column;
   overflow-y: auto;
   width: 53%;
-  padding-bottom: 100px;
+  padding-bottom: 4vh;
 }
 
 
@@ -2241,7 +2274,6 @@ body{
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 20px;
   margin-top: 10px;
-  overflow-y: auto;
 }
 
 
@@ -2269,14 +2301,14 @@ body{
 
 .mixMatchTileTitle {
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   opacity: 0.95;
   line-height: 1.2;
 }
 
 .mixMatchTileBadge {
   font-weight: 800;
-  font-size: 12px;
+  font-size: 11px;
   padding: 4px 8px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.12);
@@ -2292,7 +2324,7 @@ body{
 .mixMatchPlaceholder {
   opacity: 0.55;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .mixMatchPlacedChip,
@@ -2303,7 +2335,7 @@ body{
   padding: 7px 10px;
   border-radius: 999px;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .mixMatchPlacedChipCorrect,
@@ -2449,12 +2481,17 @@ body{
   width: 8px;
 }
 
-.mixMatchRight::-webkit-scrollbar{
+.mixMatchRight {
   overflow-y: auto;
+  height: 90vh;
+  padding-bottom: 0.6vh;         /* space for scrollbar */
+}
+
+.mixMatchRight::-webkit-scrollbar{
   width: 8px;
 }
 
-.mixMatchBank::-webkit-scrollbar-thumb {
+.mixMatchRight::-webkit-scrollbar-thumb {
   background: rgba(255,255,255,0.14);
   border-radius: 999px;
 }

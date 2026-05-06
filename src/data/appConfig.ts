@@ -110,7 +110,6 @@ export const teamGames: Record<TeamGameId, TeamGameMeta> = {
   },
 };
 
-/** ✅ Team-game route helpers */
 export function tgLobbyPath(mode: TeamMode, gameId: TeamGameId) {
   return `/${mode}/${gameId}/lobby`;
 }

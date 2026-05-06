@@ -44,6 +44,7 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
   const [submitted, setSubmitted] = useState(false);
   const [optionStatus, setOptionStatus] = useState<Record<string, OptionMark>>({});
   const [showResult, setShowResult] = useState(false);
+  const [finalFormattedTime, setFinalFormattedTime] = useState<string>("");
 
   const savedRef = useRef(false);
 
@@ -251,6 +252,9 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
     }
 
     setOptionStatus(next);
+
+    timer.stop();
+    setFinalFormattedTime(timer.formatted);
     setSubmitted(true);
     setShowResult(true);
   }
@@ -278,7 +282,7 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
   const scorePreview = timeToScore(timeSeconds);
 
   return (
-    <div className="game-root" style={{overflow: "hidden"}}>
+    <div className="game-root">
       
       <MixMatchOptionBank
         options={puzzle.options}
@@ -306,7 +310,7 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
           onSelectTeam={setActiveTeamId}
         />
 
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}> 
+        {/* <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}> 
           <button 
             type="button" 
             className="btn ghost" 
@@ -314,7 +318,7 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
             title="Test helper: fills every tile with the correct answer" > 
             Auto Fill (Test) 
           </button> 
-        </div> 
+        </div>  */}
 
         <MixMatchBoard
           puzzle={puzzle}
@@ -352,18 +356,19 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
                     e.preventDefault();
                     e.stopPropagation();
                     setShowResult(false);
+
+                    props.navigate("/home");
                   }}
-                  aria-label="Close results"
                 >
                   ✕
                 </button>
 
                 <div className="mixMatchResultLabel">Result</div>
-                <div className="mixMatchResultTime">{timer.formatted}</div>
+                <div className="mixMatchResultTime">{finalFormattedTime || timer.formatted}</div>
                 <div className="mixMatchResultHint">Penalties included</div>
 
                 <div className="mixMatchResultHint" style={{ marginTop: 8 }}>
-                  Score: <b>{scorePreview}</b> (BASE {BASE_SECONDS}s)
+                  Score: <b>{scorePreview}</b>
                 </div>
               </motion.div>
             </motion.div>

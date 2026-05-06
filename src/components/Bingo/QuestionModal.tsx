@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Team, Tile } from '../../types'
-import TimerRing from './../Bingo/TimerRing'
+import TimerRing from '../Common/TimerRing'
 import { sfx } from '../../utils/sfx'
 
 export default function QuestionModal(props: {
@@ -51,7 +51,6 @@ export default function QuestionModal(props: {
     return () => clearInterval(t)
   }, [props.open, revealed])
 
-  // ✅ Reset when modal closes
   useEffect(() => {
     if (props.open) return
     setSec(30)

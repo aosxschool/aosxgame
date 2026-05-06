@@ -18,7 +18,9 @@ type LocationState = {
   topicCode: string;
 };
 
-const BASE_SECONDS = 600; // same as MixMatch
+const BASE_SECONDS = 600; // 10mins
+
+//score is time given - time used
 
 function timeToScore(totalSeconds: number) {
   return Math.max(0, BASE_SECONDS - Math.floor(totalSeconds));
@@ -51,8 +53,6 @@ export default function BeaconPointsPage(props: {
   const nav = loc.state as LocationState | null;
 
   const { mode } = useParams<{ mode: string }>();
-
-  // ✅ hooks must run regardless of nav state
   const [placements, setPlacements] = useState<Record<string, string>>({});
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -67,13 +67,10 @@ export default function BeaconPointsPage(props: {
   const [reviewMode, setReviewMode] = useState(false);
   const [showCorrect, setShowCorrect] = useState(false);
 
-  // prevent double save
-  const savedRef = useRef(false);
+
+  const savedKeyRef = useRef<string | null>(null);
 
   const usedLabels = useMemo(() => Object.values(placements), [placements]);
-
-  // ✅ your hook apparently returns NUMBER (seconds) in your app
-  // (but we still guard if it ever returns a string)
   const rawTime = useGameTimer(running, timerKey) as unknown;
 
   const elapsedSeconds =
@@ -81,12 +78,9 @@ export default function BeaconPointsPage(props: {
       ? rawTime
       : parseTimeToSeconds(String(rawTime ?? "00:00"));
 
-  // ✅ after hooks, do redirect
   if (!nav?.teams?.length || !nav.topicCode) {
     return <Navigate to="/home" replace />;
   }
-
-  // ✅ only allow ONE team
   const team = nav.teams[0];
   const topicCode = nav.topicCode;
 
@@ -118,10 +112,10 @@ export default function BeaconPointsPage(props: {
     const { course, topic } = toLeaderboardFields(mode, topicCode);
     const score = timeToScore(finalSeconds);
 
-    console.log("[BeaconPoints] Saving:", { course, topic, team: team.name, score });
+    // console.log("[BeaconPoints] Saving:", { course, topic, team: team.name, score });
 
     await saveAllTeams(course, topic, [{ name: team.name, score }]);
-    console.log("[BeaconPoints] Saved OK");
+    // console.log("[BeaconPoints] Saved OK");
   };
 
   const handleFinish = async () => {
@@ -133,7 +127,7 @@ export default function BeaconPointsPage(props: {
       else wrong.push(zone);
     });
 
-    const penaltySeconds = wrong.length * 10; // your rule
+    const penaltySeconds = wrong.length * 10; 
     setPenalty(penaltySeconds);
 
     setIncorrectZones(wrong);
@@ -142,18 +136,19 @@ export default function BeaconPointsPage(props: {
     setRunning(false);
     setFinished(true);
 
-    // ✅ save once
-    if (!savedRef.current) {
-      savedRef.current = true;
+    const finalSeconds = Math.floor(elapsedSeconds) + penaltySeconds;
 
-      const finalSeconds = Math.floor(elapsedSeconds) + penaltySeconds;
+    const saveKey = `${mode}:${topicCode}:${team.name}:${finalSeconds}`;
 
-      try {
-        await persistLeaderboard(finalSeconds);
-      } catch (e) {
-        console.error("Failed to save BeaconPoints leaderboard:", e);
-        savedRef.current = false; // allow retry if needed
-      }
+    if (savedKeyRef.current === saveKey) return;
+
+    savedKeyRef.current = saveKey;
+
+    try {
+      await persistLeaderboard(finalSeconds);
+    } catch (e) {
+      console.error("Failed to save BeaconPoints leaderboard:", e);
+      savedKeyRef.current = null;
     }
   };
 
@@ -178,7 +173,7 @@ export default function BeaconPointsPage(props: {
     setPenalty(0);
     setRunning(false);
     setTimerKey((prev) => prev + 1);
-    savedRef.current = false;
+    savedKeyRef.current = null;
   };
 
   const handleToggleCorrect = () => setShowCorrect((prev) => !prev);
@@ -190,7 +185,7 @@ export default function BeaconPointsPage(props: {
         showCorrect={showCorrect}
         onToggleCorrect={handleToggleCorrect}
         onRetry={handleRetry}
-        time={Math.floor(elapsedSeconds)} // ✅ number
+        time={Math.floor(elapsedSeconds)} 
         penalty={penalty}
       />
     );
@@ -205,14 +200,14 @@ export default function BeaconPointsPage(props: {
         incorrectZones={incorrectZones}
         correctZones={correctZones}
         onDrop={handleDrop}
-        time={Math.floor(elapsedSeconds)} // ✅ number
+        time={Math.floor(elapsedSeconds)} 
         onFinish={handleFinish}
         onClear={handleClear}
       />
 
       {finished && (
         <ResultModal
-          time={Math.floor(elapsedSeconds)} // ✅ number
+          time={Math.floor(elapsedSeconds)} 
           penalty={penalty}
           title="Exercise Completed"
           actionLabel="View Correct Answers"

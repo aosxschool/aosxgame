@@ -34,7 +34,6 @@ export default function FillBoxesPlayPage(props: {
     return x;
   }
 
-  // ✅ allCorrect when EVERY answerKey cell is correct
   const allCorrect = useMemo(() => {
     for (const k of Object.keys(puzzle.answerKey)) {
       if (state.status[k] !== "correct") return false;
@@ -42,7 +41,6 @@ export default function FillBoxesPlayPage(props: {
     return Object.keys(puzzle.answerKey).length > 0;
   }, [state.status, puzzle.answerKey]);
 
-  // ✅ stop timer + popup once on completion
   useEffect(() => {
     const prev = prevAllCorrectRef.current;
 
@@ -118,7 +116,7 @@ export default function FillBoxesPlayPage(props: {
   }
 
   return (
-    <div className="page" style={{ maxWidth: "95vw" }}>
+    <div className="page" style={{ maxWidth: "95vw", display: "block" }}>
       <FillBoxesTopBar
         title="Fill in the Boxes"
         timeLabel={timer.formatted}

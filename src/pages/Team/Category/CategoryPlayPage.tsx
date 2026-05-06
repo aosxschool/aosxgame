@@ -202,95 +202,98 @@ export default function CategoryPlaypage(props: {
   }
 
   return (
-    <div className="page" style={{ maxWidth: "80%", overflow: "hidden" }}>
-      <div className="topbar">
-        <div className="topLeft">
-          <div className="topTitle">Category</div>
-          <div className="topSub">
-            Module: <b>{nav.topicCode.toUpperCase()}</b> • Drag a team onto a points tile to answer
+    <div className="page" style={{maxWidth: "100vw"}}>
+      <div style={{maxWidth: "70vw"}}>
+        <div className="topbar">
+          <div className="topLeft">
+            <div className="topTitle">Category</div>
+            <div className="topSub">
+              Module: <b>{nav.topicCode.toUpperCase()}</b> • Drag a team onto a points tile to answer
+            </div>
+          </div>
+
+          <div className="topRight">
+            <button className="btn danger" onClick={() => void endGame()}>
+              End Game
+            </button>
           </div>
         </div>
 
-        <div className="topRight">
-          <button className="btn danger" onClick={() => void endGame()}>
-            End Game
-          </button>
-        </div>
+        <TeamChipsBar teams={game.teams} selectedTeamId={game.selectedTeamId} onSelect={game.setSelectedTeamId} />
+
+        <CategoryBoard
+          tiles={game.tiles}
+          teamsById={teamsById}
+          onDropTeamOnTile={(tileId, teamId) => {
+            const tile = game.tiles.find((t) => t.id === tileId);
+            if (!tile || tile.used) return;
+
+            setPendingPick({ tileId, teamId });
+            setRevealOpen(true);
+          }}
+        />
+
+        <CustomDragLayer teams={game.teams} />
+
+        <QuestionRevealOverlay
+          open={revealOpen}
+          tile={
+            pendingTile
+              ? ({
+                  id: `cat-${pendingTile.id}`,
+                  claimedByTeamId: undefined,
+                  question: {
+                    category: pendingTile.category,
+                    points: pendingTile.points,
+                    question: "",
+                  },
+                } as any)
+              : null
+          }
+          teams={game.teams}
+          onDone={() => {
+            setRevealOpen(false);
+            setCountdownOpen(true);
+          }}
+        />
+
+        <CountdownOverlay
+          open={countdownOpen}
+          seconds={3}
+          label="Question starting"
+          onDone={() => {
+            setCountdownOpen(false);
+            if (!pendingPick) return;
+
+            game.pickTile(pendingPick.tileId, pendingPick.teamId);
+            setPendingPick(null);
+          }}
+        />
+
+        <CategoryQuestionModel
+          open={game.phase !== "board" && !!game.activeTile}
+          phase={game.phase === "board" ? "question" : game.phase}
+          teams={game.selectableTeams}
+          selectedTeamId={game.selectedTeamId}
+          onSelectTeam={game.setSelectedTeamId}
+          armedTeamId={game.armedTeamId}
+          onArmTeam={game.armTeam}
+          category={game.activeTile?.category ?? ""}
+          value={game.activeTile?.points ?? 0}
+          question={game.activeTile?.question.question ?? ""}
+          answers={{
+            A: game.activeTile?.question.a ?? "",
+            B: game.activeTile?.question.b ?? "",
+            C: game.activeTile?.question.c ?? "",
+            D: game.activeTile?.question.d ?? "",
+          }}
+          onAnswer={game.submitAnswer}
+          revealState={game.revealState}
+          onAcknowledgeReveal={game.acknowledgeReveal}
+          onClose={game.closeModal}
+          onTimeout={undefined}
+        />
       </div>
-
-      <TeamChipsBar teams={game.teams} selectedTeamId={game.selectedTeamId} onSelect={game.setSelectedTeamId} />
-
-      <CategoryBoard
-        tiles={game.tiles}
-        teamsById={teamsById}
-        onDropTeamOnTile={(tileId, teamId) => {
-          const tile = game.tiles.find((t) => t.id === tileId);
-          if (!tile || tile.used) return;
-
-          setPendingPick({ tileId, teamId });
-          setRevealOpen(true);
-        }}
-      />
-
-      <CustomDragLayer teams={game.teams} />
-
-      <QuestionRevealOverlay
-        open={revealOpen}
-        tile={
-          pendingTile
-            ? ({
-                id: `cat-${pendingTile.id}`,
-                claimedByTeamId: undefined,
-                question: {
-                  category: pendingTile.category,
-                  points: pendingTile.points,
-                  question: "",
-                },
-              } as any)
-            : null
-        }
-        teams={game.teams}
-        onDone={() => {
-          setRevealOpen(false);
-          setCountdownOpen(true);
-        }}
-      />
-
-      <CountdownOverlay
-        open={countdownOpen}
-        seconds={3}
-        label="Question starting"
-        onDone={() => {
-          setCountdownOpen(false);
-          if (!pendingPick) return;
-
-          game.pickTile(pendingPick.tileId, pendingPick.teamId);
-          setPendingPick(null);
-        }}
-      />
-
-      <CategoryQuestionModel
-        open={game.phase !== "board" && !!game.activeTile}
-        phase={game.phase === "board" ? "question" : game.phase}
-        teams={game.selectableTeams}
-        selectedTeamId={game.selectedTeamId}
-        onSelectTeam={game.setSelectedTeamId}
-        armedTeamId={game.armedTeamId}
-        onArmTeam={game.armTeam}
-        category={game.activeTile?.category ?? ""}
-        value={game.activeTile?.points ?? 0}
-        question={game.activeTile?.question.question ?? ""}
-        answers={{
-          A: game.activeTile?.question.a ?? "",
-          B: game.activeTile?.question.b ?? "",
-          C: game.activeTile?.question.c ?? "",
-          D: game.activeTile?.question.d ?? "",
-        }}
-        onAnswer={game.submitAnswer}
-        revealState={game.revealState}
-        onAcknowledgeReveal={game.acknowledgeReveal}
-        onClose={game.closeModal}
-      />
     </div>
-  );
+   );
 }
