@@ -5,7 +5,6 @@ export default function MixMatchOptionTile(props: {
   optionId: string;
   label: string;
 
-  // "correct" | "wrong" | undefined
   status?: "correct" | "wrong";
 
   disabled?: boolean;

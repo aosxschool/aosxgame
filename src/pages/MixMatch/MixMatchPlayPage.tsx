@@ -306,7 +306,7 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
           onSelectTeam={setActiveTeamId}
         />
 
-        {/* <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}> 
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}> 
           <button 
             type="button" 
             className="btn ghost" 
@@ -314,7 +314,7 @@ export default function MixMatchPlayPage(props: { navigate: (to: string) => void
             title="Test helper: fills every tile with the correct answer" > 
             Auto Fill (Test) 
           </button> 
-        </div>  */}
+        </div> 
 
         <MixMatchBoard
           puzzle={puzzle}
