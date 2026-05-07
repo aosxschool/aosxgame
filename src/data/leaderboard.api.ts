@@ -25,9 +25,6 @@ type ScorePayload = {
 function cleanTeamName(name: string) {
   return name.trim().replace(/\s+/g, " ");
 }
-function cleanTeamName(name: string) {
-  return name.trim().replace(/\s+/g, " ");
-}
 
 export async function saveTeamScore({
   course,
