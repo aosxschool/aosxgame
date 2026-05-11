@@ -1,95 +1,123 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import type { Team, Tile } from '../../types'
-import TimerRing from '../Common/TimerRing'
-import { sfx } from '../../utils/sfx'
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { Team, Tile } from "../../types";
+import TimerRing from "../Common/TimerRing";
+import { sfx } from "../../utils/sfx";
 
 export default function QuestionModal(props: {
-  open: boolean
-  tile: Tile | null
-  team: Team | null
+  open: boolean;
+  tile: Tile | null;
+  team: Team | null;
 
-  teams: Team[]
-  selectedTeamId: string
-  onSelectTeam: (teamId: string) => void
+  teams: Team[];
+  selectedTeamId: string;
+  onSelectTeam: (teamId: string) => void;
+  attemptedTeamIds: Set<string>;
 
-  onClose: () => void
-  onCorrect: () => void
-  onWrong: () => void
+  onTimeout: () => void;
+  onClose: () => void;
+  onCorrect: () => void;
+  onWrong: () => void;
 }) {
-  const total = 30
-  const [sec, setSec] = useState<number>(total)
+  const total = 30;
+  const [sec, setSec] = useState<number>(total);
+  const [revealed, setRevealed] = useState(false);
 
-  // show answer only after Correct is clicked
-  const [revealed, setRevealed] = useState(false)
+  const [teamMenuOpen, setTeamMenuOpen] = useState(false);
+  const teamPickerRef = useRef<HTMLDivElement | null>(null);
+  const prevTileIdRef = useRef<string | null>(null);
+  const timeoutFiredRef = useRef(false);
 
-  // Custom dropdown open state
-  const [teamMenuOpen, setTeamMenuOpen] = useState(false)
-  const teamPickerRef = useRef<HTMLDivElement | null>(null)
-
-  const prevTileIdRef = useRef<string | null>(null)
-
-  // Reset when a NEW tile opens
   useEffect(() => {
-    if (!props.open || !props.tile) return
+    if (!props.open || !props.tile) return;
 
-    const tileId = props.tile.id
-    const isNewTile = prevTileIdRef.current !== tileId
+    const tileId = props.tile.id;
+    const isNewTile = prevTileIdRef.current !== tileId;
 
     if (isNewTile) {
-      prevTileIdRef.current = tileId
-      setSec(30)
-      setTeamMenuOpen(false)
-      setRevealed(false)
+      prevTileIdRef.current = tileId;
+      setSec(total);
+      setTeamMenuOpen(false);
+      setRevealed(false);
+      timeoutFiredRef.current = false;
     }
-  }, [props.open, props.tile?.id])
-
-  // Countdown timer (stops after reveal)
-  useEffect(() => {
-    if (!props.open || revealed) return
-    const t = setInterval(() => setSec((s) => Math.max(0, s - 1)), 1000)
-    return () => clearInterval(t)
-  }, [props.open, revealed])
+  }, [props.open, props.tile?.id]);
 
   useEffect(() => {
-    if (props.open) return
-    setSec(30)
-    setRevealed(false)
-    setTeamMenuOpen(false)
-  }, [props.open, props.tile?.id])
+    if (!props.open) return;
+    if (revealed) return;
+    if (!props.team) return;
+    if (sec <= 0) return;
 
-  // Close dropdown only
+    const t = setInterval(() => {
+      setSec((s) => Math.max(0, s - 1));
+    }, 1000);
+
+    return () => clearInterval(t);
+  }, [props.open, revealed, props.team, sec]);
+
   useEffect(() => {
-    if (!teamMenuOpen) return
+    if (!props.open) return;
+    if (revealed) return;
+    if (!props.team) return;
+    if (sec !== 0) return;
+    if (timeoutFiredRef.current) return;
+
+    timeoutFiredRef.current = true;
+    props.onTimeout();
+  }, [props.open, revealed, props.team, sec, props.onTimeout]);
+
+  useEffect(() => {
+    if (props.open) return;
+
+    setSec(total);
+    setRevealed(false);
+    setTeamMenuOpen(false);
+    timeoutFiredRef.current = false;
+  }, [props.open]);
+
+  useEffect(() => {
+    if (!props.team) {
+      setSec(total);
+      timeoutFiredRef.current = false;
+    }
+  }, [props.team?.id]);
+
+  useEffect(() => {
+    if (!teamMenuOpen) return;
+
     const onDown = (e: MouseEvent) => {
-      const el = e.target as HTMLElement
-      if (!teamPickerRef.current?.contains(el)) setTeamMenuOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
-  }, [teamMenuOpen])
+      const el = e.target as HTMLElement;
+      if (!teamPickerRef.current?.contains(el)) setTeamMenuOpen(false);
+    };
 
-  // Esc closes dropdown only
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [teamMenuOpen]);
+
   useEffect(() => {
-    if (!props.open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (teamMenuOpen) setTeamMenuOpen(false)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [props.open, teamMenuOpen])
+    if (!props.open) return;
 
-  const canAnswer = !!props.team
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && teamMenuOpen) {
+        setTeamMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [props.open, teamMenuOpen]);
+
+  const canAnswer = !!props.team;
 
   const selectedTeam = useMemo(
     () => props.teams.find((t) => t.id === props.selectedTeamId) ?? null,
-    [props.teams, props.selectedTeamId],
-  )
+    [props.teams, props.selectedTeamId]
+  );
 
   const header = useMemo(() => {
-    if (!props.tile) return null
+    if (!props.tile) return null;
+
     return (
       <div className="modalHeader">
         <div className="modalPts">
@@ -97,12 +125,17 @@ export default function QuestionModal(props: {
           <div className="modalPtsLab">points</div>
         </div>
 
-        <TimerRing secondsLeft={sec} secondsTotal={props.tile.question.timeLimitSec} />
+        {!revealed && (
+          <TimerRing
+            secondsLeft={sec}
+            secondsTotal={props.tile.question.timeLimitSec ?? total}
+          />
+        )}
       </div>
-    )
-  }, [props.tile, sec])
+    );
+  }, [props.tile, sec, revealed]);
 
-  const answerText = (props.tile?.question as any)?.answer ?? 'Answer not provided.'
+  const answerText = (props.tile?.question as any)?.answer ?? "Answer not provided.";
 
   return (
     <AnimatePresence>
@@ -119,33 +152,37 @@ export default function QuestionModal(props: {
             initial={{ y: 20, scale: 0.96, opacity: 0 }}
             animate={{ y: 0, scale: 1, opacity: 1 }}
             exit={{ y: 20, scale: 0.96, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+            transition={{ type: "spring", stiffness: 420, damping: 28 }}
             onClick={(e) => e.stopPropagation()}
           >
             {header}
 
             {!revealed && (
               <div className="modalTeamRow">
-                <div className="modalTeamLabel">Answering team</div>
+                <div className="modalTeamLabel">
+                  {selectedTeam ? "Answering team" : "Choose team to steal"}
+                </div>
 
                 <div className="teamPicker" ref={teamPickerRef}>
                   <button
                     type="button"
                     className="teamSelectPro"
                     onClick={() => {
-                      sfx.tap()
-                      setTeamMenuOpen((o) => !o)
+                      sfx.tap();
+                      setTeamMenuOpen((o) => !o);
                     }}
                     aria-expanded={teamMenuOpen}
                     aria-haspopup="listbox"
                   >
                     <span
                       className="teamDot"
-                      style={{ background: selectedTeam?.color ?? 'transparent' }}
+                      style={{ background: selectedTeam?.color ?? "transparent" }}
                       aria-hidden="true"
                     />
-                    <span className="teamName">{selectedTeam?.name ?? 'Select team'}</span>
-                    <span className="teamScore">{selectedTeam ? `${selectedTeam.score} pts` : ''}</span>
+                    <span className="teamName">{selectedTeam?.name ?? "Select team"}</span>
+                    <span className="teamScore">
+                      {selectedTeam ? `${selectedTeam.score} pts` : ""}
+                    </span>
                     <span className="teamArrow" aria-hidden="true">
                       ▾
                     </span>
@@ -162,25 +199,50 @@ export default function QuestionModal(props: {
                         role="listbox"
                       >
                         {props.teams.map((t) => {
-                          const active = t.id === props.selectedTeamId
+                          const active = t.id === props.selectedTeamId;
+                          const alreadyTried = props.attemptedTeamIds.has(t.id);
+
                           return (
                             <button
                               key={t.id}
                               type="button"
-                              className={`teamOption ${active ? 'active' : ''}`}
+                              className={`teamOption ${active ? "active" : ""}`}
+                              disabled={alreadyTried}
                               onClick={() => {
-                                sfx.tap()
-                                props.onSelectTeam(t.id)
-                                setTeamMenuOpen(false)
+                                if (alreadyTried) return;
+
+                                sfx.tap();
+                                props.onSelectTeam(t.id);
+                                setSec(total);
+                                timeoutFiredRef.current = false;
+                                setTeamMenuOpen(false);
                               }}
                               role="option"
                               aria-selected={active}
+                              title={alreadyTried ? "This team already tried" : ""}
                             >
-                              <span className="teamDot" style={{ background: t.color }} aria-hidden="true" />
-                              <span className="teamName">{t.name}</span>
-                              <span className="teamScore">{t.score} pts</span>
+                              <span
+                                className="teamDot"
+                                style={{
+                                  background: alreadyTried ? "#888" : t.color,
+                                  opacity: alreadyTried ? 0.35 : 1,
+                                }}
+                                aria-hidden="true"
+                              />
+                              <span
+                                className="teamName"
+                                style={{ opacity: alreadyTried ? 0.45 : 1 }}
+                              >
+                                {t.name}
+                              </span>
+                              <span
+                                className="teamScore"
+                                style={{ opacity: alreadyTried ? 0.45 : 1 }}
+                              >
+                                {t.score} pts
+                              </span>
                             </button>
-                          )
+                          );
                         })}
                       </motion.div>
                     )}
@@ -216,24 +278,35 @@ export default function QuestionModal(props: {
             </AnimatePresence>
 
             <div className="questionFooter">
-              <div className="modalHint" style={{ visibility: revealed ? 'hidden' : 'visible' }}>
-                After a tile is marked correct, it is <b>locked</b> and cannot be replaced.
+              <div className="modalHint" style={{ visibility: revealed ? "hidden" : "visible" }}>
+                {!props.team
+                  ? "Select another team to steal."
+                  : "If wrong or time runs out, other teams can steal."}
               </div>
 
               <div className="modalActions">
                 {!revealed ? (
                   <>
-                    <button className="btn danger" onClick={() => { sfx.tap(); props.onWrong() }} disabled={!canAnswer}>
+                    <button
+                      className="btn danger"
+                      onClick={() => {
+                        sfx.tap();
+                        setSec(total);
+                        timeoutFiredRef.current = false;
+                        props.onWrong();
+                      }}
+                      disabled={!canAnswer}
+                    >
                       Wrong
                     </button>
 
                     <button
                       className="btn success"
                       onClick={() => {
-                        sfx.tap()
-                        props.onCorrect()
-                        setTeamMenuOpen(false)
-                        setRevealed(true)
+                        sfx.tap();
+                        props.onCorrect();
+                        setTeamMenuOpen(false);
+                        setRevealed(true);
                       }}
                       disabled={!canAnswer}
                     >
@@ -241,7 +314,13 @@ export default function QuestionModal(props: {
                     </button>
                   </>
                 ) : (
-                  <button className="btn" onClick={() => { sfx.tap(); props.onClose() }}>
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      sfx.tap();
+                      props.onClose();
+                    }}
+                  >
                     Close
                   </button>
                 )}
@@ -251,5 +330,5 @@ export default function QuestionModal(props: {
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }

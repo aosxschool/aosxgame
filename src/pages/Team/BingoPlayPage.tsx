@@ -60,7 +60,7 @@ function recomputeTeams(teams: Team[], tiles: Tile[]): Team[] {
 
 type LobbyState = {
   teams: Team[];
-  topicCode: string; // comes from lobby
+  topicCode: string;
 };
 
 export default function BingoPlayPage(props: {
@@ -73,35 +73,33 @@ export default function BingoPlayPage(props: {
   const loc = useLocation();
   const nav = loc.state as LobbyState | null;
 
-  // ✅ if someone opens play page directly, redirect
   if (!nav?.teams?.length || !nav.topicCode || !mode) {
     return <Navigate to="/home" replace />;
   }
 
-  // ✅ use teams from lobby (single source of truth)
   const [teams, setTeams] = useState<Team[]>(nav.teams);
   const [finalTeams, setFinalTeams] = useState<Team[]>([]);
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedTeamId, setSelectedTeamId] = useState<string>(nav.teams[0]?.id ?? "");
-  const selectedTeam = useMemo(
-    () => teams.find((t) => t.id === selectedTeamId) ?? null,
-    [teams, selectedTeamId]
+  const [armedTeamId, setArmedTeamId] = useState<string | null>(null);
+  const [attemptedTeamIds, setAttemptedTeamIds] = useState<Set<string>>(new Set());
+
+  const armedTeam = useMemo(
+    () => teams.find((t) => t.id === armedTeamId) ?? null,
+    [teams, armedTeamId]
   );
 
   const [ended, setEnded] = useState(false);
 
-  // Flow states
   const [activeTileIndex, setActiveTileIndex] = useState<number | null>(null);
   const [pendingTileIndex, setPendingTileIndex] = useState<number | null>(null);
   const [revealOpen, setRevealOpen] = useState(false);
   const [countdownOpen, setCountdownOpen] = useState(false);
 
-  // ✅ prevent duplicate leaderboard writes
   const endingRef = useRef(false);
 
-  // load tiles
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -122,14 +120,19 @@ export default function BingoPlayPage(props: {
   const startQuestionFlow = (idx: number) => {
     setPendingTileIndex(idx);
     setRevealOpen(true);
+    setAttemptedTeamIds(new Set());
+    setArmedTeamId(selectedTeamId);
   };
 
   const lockClaim = (tileIndex: number, teamId: string, playFx = false) => {
-    const nextTiles = tiles.map((t, i) => (i === tileIndex ? { ...t, claimedByTeamId: teamId } : t));
+    const nextTiles = tiles.map((t, i) =>
+      i === tileIndex ? { ...t, claimedByTeamId: teamId } : t
+    );
 
     if (playFx) {
       const beforeLines = lineKeysCompleted(tiles, teamId).length;
       const afterLines = lineKeysCompleted(nextTiles, teamId).length;
+
       if (afterLines > beforeLines) {
         burstConfetti();
         sfx.bonus();
@@ -140,17 +143,39 @@ export default function BingoPlayPage(props: {
     setTeams((prev) => recomputeTeams(prev, nextTiles));
   };
 
+  const moveToStealOrClose = (failedTeamId: string) => {
+    setAttemptedTeamIds((prev) => {
+      const next = new Set(prev);
+      next.add(failedTeamId);
+
+      if (next.size >= teams.length) {
+        setArmedTeamId(null);
+        setActiveTileIndex(null);
+      } else {
+        setArmedTeamId(null);
+      }
+
+      return next;
+    });
+  };
+
   const markWrong = () => {
-    if (activeTileIndex === null || !selectedTeam) return;
-    const tile = tiles[activeTileIndex];
-    if (!tile) return;
+    if (activeTileIndex === null || !armedTeam) return;
 
     sfx.wrong();
-    setActiveTileIndex(null);
+    moveToStealOrClose(armedTeam.id);
+  };
+
+  const markTimeout = () => {
+    if (activeTileIndex === null || !armedTeam) return;
+
+    sfx.wrong();
+    moveToStealOrClose(armedTeam.id);
   };
 
   const markCorrect = () => {
-    if (activeTileIndex === null || !selectedTeam) return;
+    if (activeTileIndex === null || !armedTeam) return;
+
     const tile = tiles[activeTileIndex];
     if (!tile) return;
 
@@ -161,15 +186,15 @@ export default function BingoPlayPage(props: {
     }
 
     sfx.correct();
-    lockClaim(activeTileIndex, selectedTeam.id, true);
-    // leave modal open; user closes or you can close:
-    // setActiveTileIndex(null);
+    lockClaim(activeTileIndex, armedTeam.id, true);
   };
 
   const resetClaimsOnly = () => {
     const cleared = tiles.map((t) => ({ ...t, claimedByTeamId: undefined }));
     setTiles(cleared);
     setTeams((prev) => recomputeTeams(prev, cleared));
+    setAttemptedTeamIds(new Set());
+    setArmedTeamId(null);
   };
 
   const persistLeaderboard = useCallback(
@@ -197,8 +222,6 @@ export default function BingoPlayPage(props: {
       await persistLeaderboard(sorted);
     } catch (e) {
       console.error("Failed to save leaderboard:", e);
-      // If you want retry when save fails:
-      // endingRef.current = false;
     }
 
     setFinalTeams(sorted);
@@ -232,10 +255,8 @@ export default function BingoPlayPage(props: {
       return;
     }
 
-    const dropped = teams.find((t) => t.id === teamId);
-    if (!dropped) return;
-
     setSelectedTeamId(teamId);
+    setArmedTeamId(teamId);
     startQuestionFlow(idx);
   };
 
@@ -250,25 +271,26 @@ export default function BingoPlayPage(props: {
   }
 
   return (
-      <div className="page">
-        <div style={{maxWidth: "70vw"}}>
-          <div className="topbar">
-            <div className="topLeft">
-              <div className="topTitle">Game {props.game.toUpperCase().replace(/_/g, " ")}</div>
-              <div className="topSub">
-                {usedTiles}/16 tiles claimed • Drag a team onto an empty tile to answer (locked after correct)
-              </div>
-            </div>
-            <div className="topRight">
-              <button className="btn ghost" onClick={resetClaimsOnly}>
-                Reset Board
-              </button>
-              <button className="btn danger" onClick={() => void endGame()}>
-                End Game
-              </button>
+  <div className="page" style={{maxWidth: "100vw"}}>
+      <div style={{maxWidth: "70vw"}}>
+        <div className="topbar">
+          <div className="topLeft">
+            <div className="topTitle">Game {props.game.toUpperCase().replace(/_/g, " ")}</div>
+            <div className="topSub">
+              {usedTiles}/16 tiles claimed • Drag a team onto an empty tile to answer
             </div>
           </div>
-        
+
+          <div className="topRight">
+            <button className="btn ghost" onClick={resetClaimsOnly}>
+              Reset Board
+            </button>
+            <button className="btn danger" onClick={() => void endGame()}>
+              End Game
+            </button>
+          </div>
+        </div>
+
         <TeamChipsBar teams={teams} selectedTeamId={selectedTeamId} onSelect={setSelectedTeamId} />
 
         <BingoBoard tiles={tiles} teams={teams} onTileDropTeam={onTileDropTeam} />
@@ -291,6 +313,7 @@ export default function BingoPlayPage(props: {
           label="Question starting"
           onDone={() => {
             setCountdownOpen(false);
+
             if (pendingTileIndex !== null) {
               setActiveTileIndex(pendingTileIndex);
               setPendingTileIndex(null);
@@ -301,11 +324,20 @@ export default function BingoPlayPage(props: {
         <QuestionModal
           open={activeTileIndex !== null}
           tile={activeTileIndex !== null ? tiles[activeTileIndex] : null}
-          team={selectedTeam}
+          team={armedTeam}
           teams={teams}
-          selectedTeamId={selectedTeamId}
-          onSelectTeam={setSelectedTeamId}
-          onClose={() => setActiveTileIndex(null)}
+          selectedTeamId={armedTeamId ?? ""}
+          onSelectTeam={(teamId) => {
+            setSelectedTeamId(teamId);
+            setArmedTeamId(teamId);
+          }}
+          attemptedTeamIds={attemptedTeamIds}
+          onTimeout={markTimeout}
+          onClose={() => {
+            setActiveTileIndex(null);
+            setArmedTeamId(null);
+            setAttemptedTeamIds(new Set());
+          }}
           onCorrect={markCorrect}
           onWrong={markWrong}
         />
