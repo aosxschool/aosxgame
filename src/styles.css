@@ -638,11 +638,31 @@ body{
   padding: 24px;
   backdrop-filter: blur(16px);
 }
+
+.modalBody{
+  padding-right: 1.5vw;
+  height: 68vh;
+  overflow-y: auto;
+}
+
+.modalBody::-webkit-scrollbar{
+  width: 8px;
+  
+}
+
+.modalBody::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 999px;
+  
+}
+
 .modalHeader{
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap: 12px;
+  margin-bottom: 1.5vh;
+
 }
 .modalPts{
   display:flex;
@@ -1829,7 +1849,7 @@ body{
 .zone-hitbox {
   background: transparent;
   pointer-events: auto;
-  /* outline: 2px dashed rgba(0,255,0,0.6); */
+  outline: 2px dashed rgba(0,255,0,0.6);
   z-index: 5;
   font-size: clamp(10px, .7vw, 14px);
 }
