@@ -29,6 +29,15 @@ export default function MapCanvas({
   const [dragging, setDragging] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
 
+  function onReset() {
+    setScale(1);
+
+    setOffset({
+      x: 0,
+      y: 0,
+    });
+  }
+
   return (
     <section className="map-section">
       {/* TOP BAR */}
@@ -36,6 +45,10 @@ export default function MapCanvas({
         <div className="map-timer">⏱ {time}s</div>
 
         <div style={{ display: "flex", gap: "20px" }}>
+          <button className="btn-pill" onClick={onReset}>
+            RESET ZOOM
+          </button>
+
           <button className="btn-pill" onClick={onClear}>
             CLEAR
           </button>

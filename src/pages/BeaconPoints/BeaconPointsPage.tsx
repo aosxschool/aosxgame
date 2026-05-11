@@ -152,6 +152,7 @@ export default function BeaconPointsPage(props: {
     }
   };
 
+  
   const handleClear = () => {
     setPlacements({});
     setIncorrectZones([]);
