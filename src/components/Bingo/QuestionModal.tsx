@@ -160,7 +160,11 @@ export default function QuestionModal(props: {
             {!revealed && (
               <div className="modalTeamRow">
                 <div className="modalTeamLabel">
-                  {selectedTeam ? "Answering team" : "Choose team to steal"}
+                  {props.attemptedTeamIds.size === 0
+                    ? "Current team"
+                    : selectedTeam
+                      ? "Stealing team"
+                      : "Choose team to steal"}
                 </div>
 
                 <div className="teamPicker" ref={teamPickerRef}>
@@ -168,6 +172,8 @@ export default function QuestionModal(props: {
                     type="button"
                     className="teamSelectPro"
                     onClick={() => {
+                      if (props.attemptedTeamIds.size === 0) return;
+
                       sfx.tap();
                       setTeamMenuOpen((o) => !o);
                     }}
@@ -179,13 +185,20 @@ export default function QuestionModal(props: {
                       style={{ background: selectedTeam?.color ?? "transparent" }}
                       aria-hidden="true"
                     />
-                    <span className="teamName">{selectedTeam?.name ?? "Select team"}</span>
+                    <span className="teamName">
+                      {selectedTeam?.name ??
+                        (props.attemptedTeamIds.size === 0
+                          ? "Waiting..."
+                          : "Select team")}
+                    </span>
                     <span className="teamScore">
                       {selectedTeam ? `${selectedTeam.score} pts` : ""}
                     </span>
-                    <span className="teamArrow" aria-hidden="true">
-                      ▾
-                    </span>
+                    {props.attemptedTeamIds.size > 0 && (
+                      <span className="teamArrow" aria-hidden="true">
+                        ▾
+                      </span>
+                    )}
                   </button>
 
                   <AnimatePresence>
@@ -239,7 +252,7 @@ export default function QuestionModal(props: {
                                 className="teamScore"
                                 style={{ opacity: alreadyTried ? 0.45 : 1 }}
                               >
-                                {t.score} pts
+                                {t.score} 
                               </span>
                             </button>
                           );
