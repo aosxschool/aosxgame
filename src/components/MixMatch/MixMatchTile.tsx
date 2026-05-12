@@ -1,8 +1,7 @@
 import { useDrag, useDrop } from "react-dnd";
-import type { MixMatchTile as Tile } from "../../types";
+import type { MixMatchTile as Tile, OptionMark  } from "../../types";
 import { DND_OPTION, type DragOptionItem } from "../../utils/dnd";
 
-type OptionMark = "correct" | "wrong";
 
 function PlacedChip(props: {
   tileId: string;
@@ -29,6 +28,8 @@ function PlacedChip(props: {
       ? "mixMatchPlacedChipGood"
       : props.mark === "wrong"
       ? "mixMatchPlacedChipBad"
+      : props.mark === "revealed"
+      ? "mixMatchPlacedChipReveal"
       : "mixMatchPlacedChip";
 
   return (

@@ -1,8 +1,6 @@
 // src/components/MixMatch/MixMatchBoard.tsx
-import type { MixMatchPuzzle, PlacementMap } from "../../types";
+import type { MixMatchPuzzle, PlacementMap, OptionMark  } from "../../types";
 import MixMatchTile from "./MixMatchTile";
-
-type OptionMark = "correct" | "wrong";
 
 export default function MixMatchBoard(props: {
   puzzle: MixMatchPuzzle;

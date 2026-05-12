@@ -1,9 +1,7 @@
 // src/components/MixMatch/MixMatchOptionChip.tsx
 import { useDrag } from "react-dnd";
-import type { MixMatchOption } from "../../types";
+import type { MixMatchOption, OptionMark  } from "../../types";
 import { DND_OPTION, type DragOptionItem } from "../../utils/dnd";
-
-type OptionMark = "correct" | "wrong";
 
 export default function MixMatchOptionChip(props: {
   option: MixMatchOption;
@@ -24,6 +22,7 @@ export default function MixMatchOptionChip(props: {
     props.used ? "mixMatchOptUsed" : "",
     props.status === "correct" ? "mixMatchOptGood" : "",
     props.status === "wrong" ? "mixMatchOptBad" : "",
+    props.status === "revealed" ? "mixMatchOptRevealed" : "",
     props.disabled ? "mixMatchOptDisabled" : "",
   ].join(" ");
 

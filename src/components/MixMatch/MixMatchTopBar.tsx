@@ -9,10 +9,14 @@ export default function MixMatchTopBar(props: {
   submitted: boolean;
   allCorrect: boolean;
   canSubmit: boolean;
+  showCorrectBoard?: boolean;
+  onToggleCorrectBoard?: () => void;
+  onReturnHome?: () => void;
 
   onSubmit: () => void;
   onReset: () => void;
-
+  onViewScore?: () => void;
+  onAutoFill?: () => void;
   teams?: Team[];
   selectedTeamId?: string;
   onSelectTeam?: (teamId: string) => void;
@@ -45,15 +49,77 @@ export default function MixMatchTopBar(props: {
         </div>
       </div>
         <div className="topRight">
-      
-        
+        {!props.submitted && (
+          <button
+            type="button"
+            className="btn-pill"
+            onClick={props.onReset}
+          >
+            Reset
+          </button>
+        )}
 
-        <button className="btn ghost" onClick={props.onReset}>
-          Reset
-        </button>
+        {props.submitted && (
+          <>
+            <button
+              type="button"
+              className="btn-pill"
+              onClick={props.onToggleCorrectBoard}
+            >
+              {props.showCorrectBoard
+                ? "Back"
+                : "View Correct Answers"}
+            </button>
+            
+            <button
+              type="button"
+              className="btn-pill"
+              onClick={props.onViewScore}
+            >
+              View Score
+            </button>
 
-        {!props.allCorrect && (
-          <button className="btn primary" onClick={props.onSubmit} disabled={!props.canSubmit}>
+            <button
+              type="button"
+              className="btn-pill"
+              onClick={props.onReturnHome}
+            >
+              Return Home
+            </button>
+          </>
+        )}
+
+        {/* {props.onAutoFill && !props.submitted && (
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={props.onAutoFill}
+          >
+            Auto Fill
+          </button>
+        )} */}
+
+        {!props.submitted && (
+          <button
+            type="button"
+            className={
+              props.canSubmit && !props.allCorrect
+                ? "btn-pill"
+                : "btn primary"
+            }
+            onClick={props.onSubmit}
+            disabled={!props.canSubmit || props.allCorrect}
+            style={{
+              opacity:
+                !props.canSubmit || props.allCorrect
+                  ? 0.5
+                  : 1,
+              cursor:
+                !props.canSubmit || props.allCorrect
+                  ? "not-allowed"
+                  : "pointer",
+            }}
+          >
             Submit
           </button>
         )}

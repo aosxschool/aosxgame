@@ -100,6 +100,10 @@ export type MixMatchPuzzle = {
   options: MixMatchOption[];
 };
 
+
+export type OptionMark = "correct" | "wrong" | "revealed";
+
+
 export type PlacementMap = Record<string, string[]>; 
 
 export type MixMatchEval = {
@@ -142,3 +146,4 @@ export type FillBoxesPuzzle = {
   caseInsensitive?: boolean;
   trim?: boolean;
 };
+

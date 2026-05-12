@@ -1464,11 +1464,10 @@ body{
   padding: 10px 14px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.295);
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   transition: background 120ms ease, transform 120ms ease;
   font-weight: 800;
-  text-transform: uppercase;
   background: transparent;
   color: white
 }
@@ -1849,7 +1848,7 @@ body{
 .zone-hitbox {
   background: transparent;
   pointer-events: auto;
-  outline: 2px dashed rgba(0,255,0,0.6);
+  /* outline: 2px dashed rgba(0,255,0,0.6); */
   z-index: 5;
   font-size: clamp(10px, .7vw, 14px);
 }
@@ -2349,7 +2348,8 @@ body{
 
 .mixMatchPlacedChip,
 .mixMatchPlacedChipGood,
-.mixMatchPlacedChipBad {
+.mixMatchPlacedChipBad,
+.mixMatchPlacedChipReveal {
   border: 0;
   cursor: pointer;
   padding: 7px 10px;
@@ -2371,6 +2371,12 @@ body{
   background: rgba(255, 70, 70, 0.22);
   color: #ffd1d1;
   box-shadow: 0 0 0 1px rgba(255, 70, 70, 0.45) inset;
+}
+
+.mixMatchPlacedChipReveal {
+  background: rgba(255, 153, 0, 0.514);
+  color: #fff3d6;
+  box-shadow: 0 0 0 1px rgb(255, 153, 0) inset;
 }
 
 /* dragging effect */

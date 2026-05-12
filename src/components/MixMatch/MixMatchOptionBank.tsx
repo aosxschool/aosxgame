@@ -1,9 +1,8 @@
 // src/components/MixMatch/MixMatchOptionBank.tsx
 import { useMemo } from "react";
-import type { MixMatchOption } from "../../types";
+import type { MixMatchOption, OptionMark } from "../../types";
 import MixMatchOptionChip from "./MixMatchOptionChip";
 
-type OptionMark = "correct" | "wrong";
 
 export default function MixMatchOptionBank(props: {
   options: MixMatchOption[];
