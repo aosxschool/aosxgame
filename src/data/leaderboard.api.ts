@@ -2,11 +2,12 @@
 import { supabase } from "../lib/supabase";
 
 export type Course = "aos" | "aosx";
-export type Topic = "bvm" | "mod_1" | "mod_2a_1" | "mod_2a_2" | "mod_2b";
+export type Topic = "avm" | "bvm" | "mod_1" | "mod_2a_1" | "mod_2a_2" | "mod_2b";
 
 export type LeaderboardRow = {
   course: Course;
   team_name: string;
+  avm: number;
   bvm: number;
   mod_1: number;
   mod_2a_1: number;
@@ -70,7 +71,7 @@ export async function loadLeaderboard(course: Course): Promise<LeaderboardRow[]>
   const { data, error } = await supabase
     .from("leaderboard")
     .select(
-      "course, team_name, bvm, mod_1, mod_2a_1, mod_2a_2, mod_2b, total_score"
+      "course, team_name, avm, bvm, mod_1, mod_2a_1, mod_2a_2, mod_2b, total_score"
     )
     .eq("course", course)
     .order("total_score", { ascending: false });

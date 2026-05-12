@@ -90,7 +90,7 @@ serve(async (req) => {
         answer: q.answer,
         points: q.points,
         time_limit_sec: q.time_limit_sec,
-        category: q.category, // ✅ NEW
+        category: q.category, 
       })),
     )
     if (insErr) return bad(`Insert failed: ${insErr.message}`, 500)

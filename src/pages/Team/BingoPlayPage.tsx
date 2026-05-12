@@ -199,8 +199,6 @@ export default function BingoPlayPage(props: {
 
   const persistLeaderboard = useCallback(
     async (finalTeamsSorted: Team[]) => {
-      if (mode === "aos" && nav.topicCode.trim().toLowerCase() === "avm") return;
-
       const { course, topic } = toLeaderboardFields(mode, nav.topicCode);
 
       await saveAllTeams(

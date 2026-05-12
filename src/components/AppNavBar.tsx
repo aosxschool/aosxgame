@@ -25,7 +25,7 @@ export function AppNavBar(props: {
           <img src={aosxlogo} alt="AOSX" className="brand_logo" />
           <div className="brand_text">
             <div className="brand_title">XYNAPSE</div>
-            <div className="brand_subtitle"><i>AOSX School's One-Stop Digital Playbook</i></div>
+            <div className="brand_subtitle"><i>One-Stop Digital Playbook</i></div>
           </div>
         </div>
 

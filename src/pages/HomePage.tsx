@@ -6,6 +6,7 @@ import PasswordModal from "../components/PasswordModal";
 type Row = {
   team_name: string;
   course: Course;
+  avm: number;
   bvm: number;
   mod_1: number;
   mod_2a_1: number;
@@ -14,11 +15,12 @@ type Row = {
 };
 
 const COURSE_TOPICS: Record<Course, string[]> = {
-  aos: ["bvm"],
+  aos: ["avm", "bvm"],
   aosx: ["mod_1", "mod_2a_1", "mod_2a_2", "mod_2b"],
 };
 
 const TOPIC_LABEL: Record<string, string> = {
+  avm: "AVM",
   bvm: "BVM",
   mod_1: "Mod 1",
   mod_2a_1: "Mod 2A.1",

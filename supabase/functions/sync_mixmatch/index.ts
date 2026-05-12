@@ -2,16 +2,16 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 type OptionRow = {
-  id: string;          // "o1".."o35"
-  position: number;    // 1..35
+  id: string;         
+  position: number;    
   answer: string;
 };
 
 type TileRow = {
-  id: string;               // "t1".."t25"
-  position: number;         // 1..25
+  id: string;               
+  position: number;        
   question: string;
-  correct_option_id: string; // must be one of option ids
+  correct_option_id: string; 
 };
 
 function json(ok: boolean, body: Record<string, unknown>, status = 200) {

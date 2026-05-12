@@ -1,6 +1,6 @@
 // src/data/leaderBoardConverter.ts
 export type Course = "aos" | "aosx";
-export type Topic = "bvm" | "mod_1" | "mod_2a_1" | "mod_2a_2" | "mod_2b";
+export type Topic = "avm" | "bvm" | "mod_1" | "mod_2a_1" | "mod_2a_2" | "mod_2b";
 
 /**
  * Converts router params → leaderboard fields
@@ -22,7 +22,7 @@ export function toLeaderboardFields(
   else if (m === "aosx") course = "aosx";
   else throw new Error(`Unknown mode: ${mode}`);
 
-  // ✅ topic mapping
+  if (t === "avm") return { course, topic: "avm" };
   if (t === "bvm") return { course, topic: "bvm" };
   if (t === "mod1") return { course, topic: "mod_1" };
   if (t === "mod2a1") return { course, topic: "mod_2a_1" };

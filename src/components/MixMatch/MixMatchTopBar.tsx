@@ -89,7 +89,7 @@ export default function MixMatchTopBar(props: {
           </>
         )}
 
-        {/* {props.onAutoFill && !props.submitted && (
+        {props.onAutoFill && !props.submitted && (
           <button
             type="button"
             className="btn ghost"
@@ -97,7 +97,7 @@ export default function MixMatchTopBar(props: {
           >
             Auto Fill
           </button>
-        )} */}
+        )}
 
         {!props.submitted && (
           <button
