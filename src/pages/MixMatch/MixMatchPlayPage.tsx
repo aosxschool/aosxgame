@@ -44,13 +44,17 @@ export default function MixMatchPlayPage(props: {
 
   const timer = useMixMatchTimer();
 
-  const [state, setState] = useState<{ placements: Record<string, string[]> } | null>(null);
+  const [state, setState] = useState<{
+    placements: Record<string, string[]>;
+  } | null>(null);
+
   const [submitted, setSubmitted] = useState(false);
   const [optionStatus, setOptionStatus] = useState<Record<string, OptionMark>>({});
   const [showResult, setShowResult] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
   const [showCorrectBoard, setShowCorrectBoard] = useState(false);
-  const [finalFormattedTime, setFinalFormattedTime] = useState<string>("");
+
+  const [rawTimeSeconds, setRawTimeSeconds] = useState(0);
   const [penaltySeconds, setPenaltySeconds] = useState(0);
 
   const savedRef = useRef(false);
@@ -60,7 +64,7 @@ export default function MixMatchPlayPage(props: {
   }
 
   const { teams, topicCode } = navState;
-  const team = teams[0];
+  const team = teams.find((t) => t.id === activeTeamId) ?? teams[0];
 
   useEffect(() => {
     setActiveTeamId(teams[0]?.id ?? "");
@@ -95,32 +99,36 @@ export default function MixMatchPlayPage(props: {
   }, [topicCode]);
 
   const optionLabelById = useMemo(() => {
-    const m: Record<string, string> = {};
-    if (!puzzle) return m;
+    const labels: Record<string, string> = {};
 
-    for (const o of puzzle.options) {
-      m[o.id] = o.label;
+    if (!puzzle) return labels;
+
+    for (const option of puzzle.options) {
+      labels[option.id] = option.label;
     }
 
-    return m;
+    return labels;
   }, [puzzle]);
 
   const placedOptionIds = useMemo(() => {
-    const s = new Set<string>();
-    if (!state) return s;
+    const ids = new Set<string>();
 
-    Object.values(state.placements).forEach((ids) => {
-      ids.forEach((id) => s.add(id));
-    });
+    if (!state) return ids;
 
-    return s;
+    for (const placedIds of Object.values(state.placements)) {
+      for (const id of placedIds) {
+        ids.add(id);
+      }
+    }
+
+    return ids;
   }, [state]);
 
   const canSubmit = useMemo(() => {
     if (!puzzle || !state) return false;
 
     return puzzle.tiles.every(
-      (t) => (state.placements[t.id]?.length ?? 0) === 1
+      (tile) => (state.placements[tile.id]?.length ?? 0) === 1
     );
   }, [puzzle, state]);
 
@@ -132,35 +140,17 @@ export default function MixMatchPlayPage(props: {
 
   const allCorrect = !!evalResult?.allCorrect;
 
-  useEffect(() => {
-    if (allCorrect) timer.stop();
-  }, [allCorrect, timer]);
-
-  useEffect(() => {
-    if (!allCorrect) return;
-    if (!mode) return;
-    if (savedRef.current) return;
-    if (mode !== "aosx") return;
-
-    savedRef.current = true;
-
-    const { course, topic } = toLeaderboardFields(mode, topicCode);
-
-    const timeSeconds = Math.floor((timer.elapsedMs ?? 0) / 1000);
-    const score = timeToScore(timeSeconds);
-
-    saveAllTeams(course, topic, [{ name: team.name, score }]).catch((e) => {
-      console.error("Failed saving MixMatch leaderboard:", e);
-      savedRef.current = false;
-    });
-  }, [allCorrect, mode, topicCode, team.name, timer.elapsedMs]);
+  const displayTimeLabel =
+    rawTimeSeconds > 0 ? `${rawTimeSeconds}s` : timer.formatted;
 
   const keepGreenClearRed = useCallback(() => {
     setOptionStatus((prev) => {
       const next: Record<string, OptionMark> = {};
 
       for (const [id, mark] of Object.entries(prev)) {
-        if (mark === "correct") next[id] = "correct";
+        if (mark === "correct") {
+          next[id] = "correct";
+        }
       }
 
       return next;
@@ -177,7 +167,9 @@ export default function MixMatchPlayPage(props: {
       if (!state) return null;
 
       for (const [tileId, ids] of Object.entries(state.placements)) {
-        if (ids.includes(optionId)) return tileId;
+        if (ids.includes(optionId)) {
+          return tileId;
+        }
       }
 
       return null;
@@ -185,12 +177,28 @@ export default function MixMatchPlayPage(props: {
     [state]
   );
 
+  function resetAll() {
+    if (!puzzle) return;
+
+    setState(buildInitialState(puzzle));
+    setSubmitted(false);
+    setOptionStatus({});
+    setShowResult(false);
+    setReviewMode(false);
+    setShowCorrectBoard(false);
+    setRawTimeSeconds(0);
+    setPenaltySeconds(0);
+
+    savedRef.current = false;
+    timer.reset?.();
+  }
+
   function onDropOption(toTileId: string, optionId: string) {
     if (!puzzle || !state) return;
-    timer.startIfNeeded();
-
+    if (submitted) return;
     if (isLockedGreen(optionId)) return;
 
+    timer.startIfNeeded();
     keepGreenClearRed();
 
     setState((prev) => {
@@ -201,7 +209,7 @@ export default function MixMatchPlayPage(props: {
 
       if (fromTileId) {
         nextPlacements[fromTileId] = (nextPlacements[fromTileId] ?? []).filter(
-          (x) => x !== optionId
+          (id) => id !== optionId
         );
       }
 
@@ -216,6 +224,7 @@ export default function MixMatchPlayPage(props: {
 
   function onMoveOption(fromTileId: string, toTileId: string, optionId: string) {
     if (!puzzle || !state) return;
+    if (submitted) return;
     if (isLockedGreen(optionId)) return;
 
     timer.startIfNeeded();
@@ -227,7 +236,7 @@ export default function MixMatchPlayPage(props: {
       const nextPlacements = { ...prev.placements };
 
       nextPlacements[fromTileId] = (nextPlacements[fromTileId] ?? []).filter(
-        (x) => x !== optionId
+        (id) => id !== optionId
       );
 
       nextPlacements[toTileId] = [optionId];
@@ -241,102 +250,105 @@ export default function MixMatchPlayPage(props: {
 
   function onRemoveOption(tileId: string, optionId: string) {
     if (!state) return;
-    timer.startIfNeeded();
-
+    if (submitted) return;
     if (isLockedGreen(optionId)) return;
 
+    timer.startIfNeeded();
     keepGreenClearRed();
 
     setState((prev) => {
       if (!prev) return prev;
 
-      const cur = prev.placements[tileId] ?? [];
+      const current = prev.placements[tileId] ?? [];
 
       return {
         ...prev,
         placements: {
           ...prev.placements,
-          [tileId]: cur.filter((x) => x !== optionId),
+          [tileId]: current.filter((id) => id !== optionId),
         },
       };
     });
   }
 
-  function resetAll() {
-    if (!puzzle) return;
-
-    setSubmitted(false);
-    setOptionStatus({});
-    setState(buildInitialState(puzzle));
-    setShowResult(false);
-    setReviewMode(false);
-    setShowCorrectBoard(false);
-    setFinalFormattedTime("");
-    savedRef.current = false;
-  }
-
   function onSubmit() {
     if (!puzzle || !state) return;
     if (!canSubmit) return;
+    if (submitted) return;
 
-    timer.startIfNeeded();
+    const rawSeconds = Math.max(
+      1,
+      Math.floor((timer.elapsedMs ?? 0) / 1000)
+    );
 
     let wrongCount = 0;
+    const nextStatus: Record<string, OptionMark> = {};
 
     for (const tile of puzzle.tiles) {
       const placed = state.placements[tile.id] ?? [];
+      const placedId = placed[0];
       const correctId = tile.requiredOptionIds[0];
 
-      if (placed.length !== 1 || placed[0] !== correctId) {
+      if (placed.length !== 1 || placedId !== correctId) {
         wrongCount += 1;
       }
-    }
 
-    if (wrongCount > 0) {
-      timer.addPenaltySeconds(wrongCount * 5);
+      if (placedId) {
+        nextStatus[placedId] = placedId === correctId ? "correct" : "wrong";
+      }
     }
 
     const penalty = wrongCount * 5;
+    const finalSeconds = rawSeconds + penalty;
+    const score = timeToScore(finalSeconds);
 
-    if (penalty > 0) {
-      timer.addPenaltySeconds(penalty);
-    }
-
+    setRawTimeSeconds(rawSeconds);
     setPenaltySeconds(penalty);
-
-    const next: Record<string, OptionMark> = {};
-
-    for (const tile of puzzle.tiles) {
-      const placed = state.placements[tile.id] ?? [];
-      const correctId = tile.requiredOptionIds[0];
-
-      if (placed.length === 1) {
-        next[placed[0]] = placed[0] === correctId ? "correct" : "wrong";
-      }
-    }
-
-    setOptionStatus(next);
-
-    timer.stop();
-    setFinalFormattedTime(timer.formatted);
+    setOptionStatus(nextStatus);
     setSubmitted(true);
     setShowResult(true);
+
+    timer.stop();
+
+    if (mode === "aosx" && !savedRef.current) {
+      savedRef.current = true;
+
+      const { course, topic } = toLeaderboardFields(mode, topicCode);
+
+      console.log("[MixMatch] saving score", {
+        course,
+        topic,
+        team: team.name,
+        rawSeconds,
+        penalty,
+        finalSeconds,
+        score,
+      });
+
+      saveAllTeams(course, topic, [
+        {
+          name: team.name,
+          score,
+        },
+      ]).catch((e) => {
+        console.error("Failed saving MixMatch leaderboard:", e);
+        savedRef.current = false;
+      });
+    }
   }
 
   function autoFillAllCorrect() {
-    if (!puzzle) return;
+    if (!puzzle || submitted) return;
 
     timer.startIfNeeded();
 
     const placements: Record<string, string[]> = {};
 
-    for (const t of puzzle.tiles) {
-      placements[t.id] = [t.requiredOptionIds[0]];
+    for (const tile of puzzle.tiles) {
+      placements[tile.id] = [tile.requiredOptionIds[0]];
     }
 
     setState({ placements });
-    keepGreenClearRed();
-    setSubmitted(false);
     setOptionStatus({});
   }
 
@@ -356,12 +368,9 @@ export default function MixMatchPlayPage(props: {
     );
   }
 
-  const timeSeconds = Math.floor((timer.elapsedMs ?? 0) / 1000);
-  const scorePreview = timeToScore(timeSeconds);
-
   const resultModal = showResult ? (
     <ResultModal
-      time={timeSeconds}
+      time={rawTimeSeconds}
       penalty={penaltySeconds}
       title="Mix & Match Completed"
       actionLabel="Back To Review"
@@ -372,10 +381,13 @@ export default function MixMatchPlayPage(props: {
     />
   ) : null;
 
-  if (reviewMode && puzzle) {
+  if (reviewMode) {
     const reviewPlacements = showCorrectBoard
       ? Object.fromEntries(
-          puzzle.tiles.map((t) => [t.id, [t.requiredOptionIds[0]]])
+          puzzle.tiles.map((tile) => [
+            tile.id,
+            [tile.requiredOptionIds[0]],
+          ])
         )
       : state.placements;
 
@@ -385,13 +397,10 @@ export default function MixMatchPlayPage(props: {
 
           for (const tile of puzzle.tiles) {
             const correctId = tile.requiredOptionIds[0];
-            const placed = state.placements[tile.id]?.[0];
+            const placedId = state.placements[tile.id]?.[0];
 
-            if (placed === correctId) {
-              next[correctId] = "correct";
-            } else {
-              next[correctId] = "revealed";
-            }
+            next[correctId] =
+              placedId === correctId ? "correct" : "revealed";
           }
 
           return next;
@@ -410,18 +419,18 @@ export default function MixMatchPlayPage(props: {
         <div className="mixMatchRight">
           <MixMatchTopBar
             title={showCorrectBoard ? "Correct Answers" : "Review Answers"}
-            subtitle={`${team.name} finished in ${timer.formatted}`}
-            timeLabel={finalFormattedTime || timer.formatted}
+            subtitle={`${team.name} finished in ${displayTimeLabel}`}
+            timeLabel={displayTimeLabel}
             submitted={true}
             allCorrect={showCorrectBoard}
             canSubmit={false}
-            onSubmit={() => {}}
-            onReset={() => {}}
+            onSubmit={onSubmit}
+            onReset={resetAll}
             teams={teams}
             selectedTeamId={activeTeamId}
             onSelectTeam={setActiveTeamId}
             showCorrectBoard={showCorrectBoard}
-            onToggleCorrectBoard={() => setShowCorrectBoard((p) => !p)}
+            onToggleCorrectBoard={() => setShowCorrectBoard((prev) => !prev)}
             onReturnHome={() => props.navigate("/home")}
             onViewScore={() => setShowResult(true)}
             onAutoFill={autoFillAllCorrect}
@@ -456,26 +465,21 @@ export default function MixMatchPlayPage(props: {
       <div className="mixMatchRight">
         <MixMatchTopBar
           title="Mix & Match"
-          subtitle={
-            allCorrect
-              ? `${team.name} finished in ${timer.formatted}`
-              : "Drag options onto tiles. Submit to check."
-          }
+          subtitle="Drag options onto tiles. Submit to check."
           timeLabel={timer.formatted}
           submitted={submitted}
           allCorrect={allCorrect}
-          canSubmit={!allCorrect && canSubmit}
+          canSubmit={canSubmit}
           onSubmit={onSubmit}
           onReset={resetAll}
           teams={teams}
           selectedTeamId={activeTeamId}
           onSelectTeam={setActiveTeamId}
           showCorrectBoard={showCorrectBoard}
-          onToggleCorrectBoard={() => setShowCorrectBoard((p) => !p)}
+          onToggleCorrectBoard={() => setShowCorrectBoard((prev) => !prev)}
           onReturnHome={() => props.navigate("/home")}
           onViewScore={() => setShowResult(true)}
           onAutoFill={autoFillAllCorrect}
-
         />
 
         <MixMatchBoard

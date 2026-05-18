@@ -8,7 +8,6 @@ function json(status: number, body: unknown) {
   });
 }
 
-// ✅ Only allow these tables to be cleaned up
 const ALLOWED_TABLES = new Set([
   "bingo_questions",
   "category_questions",
@@ -27,7 +26,6 @@ serve(async (req) => {
   try {
     if (req.method !== "POST") return json(405, { ok: false, error: "Only POST allowed" });
 
-    // ✅ token auth (from Apps Script)
     const token = req.headers.get("x-sync-token");
     const expected = Deno.env.get("SYNC_TOKEN");
     if (!expected || !token || token !== expected) return json(401, { ok: false, error: "Unauthorized" });
@@ -84,7 +82,6 @@ serve(async (req) => {
 
     const results: Record<string, { ok: boolean; deleted?: number; error?: string }> = {};
 
-    // ✅ cleanup each requested table
     for (const table of tables) {
       const { error, count } = await supabase
         .from(table)

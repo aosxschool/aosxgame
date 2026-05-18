@@ -23,7 +23,7 @@ const BASE_SECONDS = 600; // 10mins
 //score is time given - time used
 
 function timeToScore(totalSeconds: number) {
-  return Math.max(0, BASE_SECONDS - Math.floor(totalSeconds));
+  return Math.max(0, BASE_SECONDS - totalSeconds);
 }
 
 // accepts "MM:SS" or "HH:MM:SS"
@@ -106,11 +106,11 @@ export default function BeaconPointsPage(props: {
     setCorrectZones((prev) => prev.filter((z) => z !== targetZoneId));
   };
 
-  const persistLeaderboard = async (finalSeconds: number) => {
+  const persistLeaderboard = async (finalSeconds: number, penalty: number) => {
     if (mode !== "aosx") return;
 
     const { course, topic } = toLeaderboardFields(mode, topicCode);
-    const score = timeToScore(finalSeconds);
+    const score = timeToScore(finalSeconds + penalty);
 
     // console.log("[BeaconPoints] Saving:", { course, topic, team: team.name, score });
 
@@ -127,7 +127,7 @@ export default function BeaconPointsPage(props: {
       else wrong.push(zone);
     });
 
-    const penaltySeconds = wrong.length * 10; 
+    const penaltySeconds = wrong.length * 5; 
     setPenalty(penaltySeconds);
 
     setIncorrectZones(wrong);
@@ -136,16 +136,14 @@ export default function BeaconPointsPage(props: {
     setRunning(false);
     setFinished(true);
 
-    const finalSeconds = Math.floor(elapsedSeconds) + penaltySeconds;
-
-    const saveKey = `${mode}:${topicCode}:${team.name}:${finalSeconds}`;
+    const saveKey = `${mode}:${topicCode}:${team.name}:${elapsedSeconds}`;
 
     if (savedKeyRef.current === saveKey) return;
 
     savedKeyRef.current = saveKey;
 
     try {
-      await persistLeaderboard(finalSeconds);
+      await persistLeaderboard(elapsedSeconds, penaltySeconds);
     } catch (e) {
       console.error("Failed to save BeaconPoints leaderboard:", e);
       savedKeyRef.current = null;
